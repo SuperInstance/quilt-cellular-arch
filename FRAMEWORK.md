@@ -114,9 +114,9 @@ proved in code).
 
 ## Status
 
-- **221 papers** in `AI-Writings/seed-canon/papers/`
-- **121 fables** in `AI-Writings/seed-canon/fables/`
-- **152 stories** in `AI-Writings/seed-canon/stories/`
+- **96+ papers** in `AI-Writings/seed-canon/papers/` (latest: paper-221, with paper-219-verification)
+- **79 fables** in `AI-Writings/seed-canon/fables/` (latest: fable-121)
+- **136 stories** in `AI-Writings/seed-canon/stories/` (latest: story-136)
 - **8 runnable Python simulations** in `quilt-cellular-arch/`
 - **5/5 laws** proved on the canon
 - **6/6/6 framework** complete (opcodes, tiers, laws)

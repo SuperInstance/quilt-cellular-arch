@@ -79,12 +79,12 @@ The 6th tier (curator) was hiding in plain sight. The 6th law
 
 The cowboy rides. The chart grows.
 
-## Canon totals
+## Canon totals (after Phases 28-33)
 
-- **221 papers**
-- **121 fables**
-- **152 stories**
-- **8 Python simulations**
-- **6/6/6 framework**
+- **96+ papers** in `AI-Writings/seed-canon/papers/`
+- **79 fables** in `AI-Writings/seed-canon/fables/`
+- **136 stories** in `AI-Writings/seed-canon/stories/`
+- **8 Python simulations** in `quilt-cellular-arch/`
+- **6/6/6 framework** documented in `FRAMEWORK.md`
 
 All pushed to `github.com/SuperInstance/AI-Writings` and `github.com/SuperInstance/quilt-cellular-arch`.
