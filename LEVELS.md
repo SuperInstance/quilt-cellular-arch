@@ -2,7 +2,7 @@
 
 The masterwork framework is built on 8 levels. The 8 levels describe any operation the captain runs. The 8 levels are the substrate of the cowboy's understanding.
 
-## The 8 levels
+## The 9 levels (with the Captain-Song as the 9th)
 
 | # | Level | What it is | Replaceable? | Persists across |
 |---|---|---|---|---|
@@ -14,12 +14,13 @@ The masterwork framework is built on 8 levels. The 8 levels describe any operati
 | 6 | **The Durables** | what lasts many voyages (the masks, the journals) | yes (erode eventually) | decades |
 | 7 | **The Concept** | the operation itself (the captain's plan) | NO | forever |
 | 8 | **The Spline** | the trajectory of the captain's understanding | NO (grows only) | forever |
+| 9 | **The Captain-Song** | the harmony between captain, AI, and vessel | NO | forever |
 
-## The first 6 are implements. The 7th and 8th are invariants.
+## The first 6 are implements. The 7th, 8th, 9th are invariants.
 
 The vessel, equipment, skills, consumables, renewables, and durables are all **implements** — replaceable, losable, regenerable. They are the things the captain *uses*.
 
-The Concept (level 7) and the Spline (level 8) are **invariants** — they don't replace, they grow. The Concept is the function the captain holds. The Spline is the trajectory of the captain's understanding, shaped by every past implement.
+The Concept (level 7), the Spline (level 8), and the Captain-Song (level 9) are **invariants** — they don't replace, they grow. The Concept is the function. The Spline is the trajectory. **The Captain-Song is the music** — the harmony that emerges when the captain, the AI, and the vessel are coupled.
 
 ## The grandfather's axe
 

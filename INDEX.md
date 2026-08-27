@@ -39,7 +39,7 @@ Welcome to the Quilt. The Quilt is a cellular-architecture framework where every
 5. **TICK_monotonicity** — clock only advances
 6. **Super-relevance** — a cell that satisfies multiple hands is more fit
 
-## The 8 levels of the operation
+## The 9 levels of the operation
 
 1. **Vessel** — the physical substrate
 2. **Equipment** — the tools
@@ -49,6 +49,7 @@ Welcome to the Quilt. The Quilt is a cellular-architecture framework where every
 6. **Durables** — what lasts many voyages
 7. **Concept** — the function (the operation itself)
 8. **Spline** — the trajectory of the captain's understanding
+9. **Captain-Song** — the harmony between captain, AI, and vessel
 
 ## The 5 gold terms (cell lifecycle)
 
@@ -95,6 +96,7 @@ Welcome to the Quilt. The Quilt is a cellular-architecture framework where every
 | **weave** | 8 levels, 56 connections, 4 leaks | `weave/weave.py` |
 | **ccgo** | 4-finger salute, 3 cycles, 9 gold terms | `ccgo/ccgo.py` |
 | **canon_mine** | 85 papers show concept-vs-implement | `mining/canon_mine.py` |
+| **captain_song** | 9th level — harmony between captain, AI, vessel | `captain_song/captain_song.py` |
 
 ## The 4 captain metaphor stories
 
