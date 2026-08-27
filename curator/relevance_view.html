@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Relevance Field — Curator Tier</title>
+<style>
+  body {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 2em;
+    line-height: 1.6;
+  }
+  h1, h2, h3 { color: #c0d0ff; }
+  h1 { border-bottom: 1px solid #404868; padding-bottom: 0.3em; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; margin: 1em 0; }
+  .box {
+    border: 1px solid #404868;
+    background: #14181f;
+    padding: 1em;
+    border-radius: 4px;
+  }
+  .box h3 { margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0.5em 0; }
+  th, td { border: 1px solid #2a2f3a; padding: 0.4em 0.6em; text-align: left; }
+  th { background: #1a2030; color: #a0b0d0; }
+  td { color: #d0d8e8; }
+  canvas { border: 1px solid #2a2f3a; display: block; margin: 0.5em 0; }
+  .legend { font-size: 0.9em; color: #808890; }
+  .maxim {
+    background: #1a2030;
+    border-left: 3px solid #c0d0ff;
+    padding: 1em 1.2em;
+    margin: 1em 0;
+    font-style: italic;
+    color: #c0d0ff;
+  }
+  .stat { color: #6ed6a0; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>The Relevance Field</h1>
+
+<p class="legend">
+  A simulation of multiple "hands" (relevance fields) competing
+  for cells in a 2D Quilt. Cells that match a hand's target are
+  fed. Cells that match multiple hands are <em>super-relevant</em>
+  and preferentially mate. Hands drift over time.
+</p>
+
+<canvas id="quilt" width="640" height="640"></canvas>
+<div class="legend">
+  Dots = cells (color = which hand feeds them). Diamonds = hands (color = which niche). Lines = cross-hand matings.
+</div>
+
+<div class="grid">
+  <div class="box">
+    <h3>Run results — relevance_field.py</h3>
+    <table>
+      <tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Initial cells</td><td class="stat">30</td></tr>
+      <tr><td>Final cells</td><td class="stat">40</td></tr>
+      <tr><td>Cross-hand matings</td><td class="stat">1,588</td></tr>
+      <tr><td>Super-relevant cells</td><td class="stat">10</td></tr>
+      <tr><td>Generations</td><td>30</td></tr>
+    </table>
+  </div>
+  <div class="box">
+    <h3>Run results — hand_evolution.py</h3>
+    <table>
+      <tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Initial hands</td><td class="stat">4</td></tr>
+      <tr><td>Final hands</td><td class="stat">7</td></tr>
+      <tr><td>Final cells</td><td class="stat">100</td></tr>
+      <tr><td>Super-relevant cells</td><td class="stat">94</td></tr>
+      <tr><td>Generations</td><td>30</td></tr>
+    </table>
+  </div>
+</div>
+
+<h2>The 6/6/6 Framework</h2>
+
+<div class="grid">
+  <div class="box">
+    <h3>5 Opcodes</h3>
+    <ul>
+      <li><b>BIND</b> — scatter (label a value)</li>
+      <li><b>LINK</b> — connect (relate two cells)</li>
+      <li><b>EFFECT</b> — transform (run a function)</li>
+      <li><b>VIEW</b> — gather (project state)</li>
+      <li><b>TICK</b> — wavefront (advance time)</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h3>6 Tiers</h3>
+    <table>
+      <tr><th>Tier</th><th>Cost</th><th>Latency</th></tr>
+      <tr><td>Totipotent</td><td>1.0</td><td>2s</td></tr>
+      <tr><td>Multipotent</td><td>0.4</td><td>800ms</td></tr>
+      <tr><td>Differentiated</td><td>0.15</td><td>300ms</td></tr>
+      <tr><td>Sclerotic</td><td>0</td><td>1ms</td></tr>
+      <tr><td>Synovial</td><td>var</td><td>var</td></tr>
+      <tr><td><b>Curator</b></td><td>var</td><td>var</td></tr>
+    </table>
+  </div>
+  <div class="box">
+    <h3>6 Laws</h3>
+    <ol>
+      <li>BIND_idempotence</li>
+      <li>LINK_transitivity</li>
+      <li>EFFECT_associativity</li>
+      <li>VIEW_purity</li>
+      <li>TICK_monotonicity</li>
+      <li><b>Super-relevance</b> (a cell that satisfies multiple hands is more fit)</li>
+    </ol>
+  </div>
+  <div class="box">
+    <h3>5 Triggers (ancestors' struggles)</h3>
+    <ul>
+      <li>Not enough light → grow taller</li>
+      <li>Wind → grow stiffer</li>
+      <li>Nibbling → grow hardier</li>
+      <li>Drought → grow deeper</li>
+      <li>Heat → grow cooler</li>
+    </ul>
+  </div>
+</div>
+
+<div class="maxim">
+  The hand is a cell. The hand is a tier. The hand is a population.
+  The hand is a substrate. The Quilt grows because the hands grow.
+  The cowboy rides the hand. The super-relevant cell dominates.
+  The cowboy rides the super-relevant.
+</div>
+
+<h2>Source</h2>
+<p>
+  <code>relevance_field.py</code> and <code>hand_evolution.py</code> in
+  <code>quilt-cellular-arch/curator/</code>.
+</p>
+
+<script>
+// Minimal canvas-based visualization of cells and hands.
+// (Re-rendered each frame from a fixed pseudo-run for illustration.)
+const canvas = document.getElementById('quilt');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// Pseudo-random but deterministic
+let seed = 42;
+function rand() {
+  seed = (seed * 9301 + 49297) % 233280;
+  return seed / 233280;
+}
+
+// Hands
+const hands = [
+  { id: 'H1', x: 0.30, y: 0.30, color: '#ff8080', niche: 'phototroph' },
+  { id: 'H2', x: 0.70, y: 0.50, color: '#80ff80', niche: 'aerotroph' },
+  { id: 'H3', x: 0.50, y: 0.70, color: '#8080ff', niche: 'saprotroph' },
+];
+
+// Generate 40 cells, biased toward the relevance field
+const cells = [];
+for (let i = 0; i < 40; i++) {
+  const r = rand();
+  // 10 super-relevant at intersection
+  if (i < 10) {
+    const t = i / 9;
+    cells.push({
+      x: 0.5 + Math.sin(t * Math.PI * 2) * 0.15 + (rand() - 0.5) * 0.1,
+      y: 0.5 + Math.cos(t * Math.PI * 2) * 0.15 + (rand() - 0.5) * 0.1,
+      hands: ['H1', 'H2', 'H3'].slice(0, 2 + (i % 2)),
+      super: i < 3,
+    });
+  } else {
+    const hand = hands[i % 3];
+    cells.push({
+      x: hand.x + (rand() - 0.5) * 0.3,
+      y: hand.y + (rand() - 0.5) * 0.3,
+      hands: [hand.id],
+      super: false,
+    });
+  }
+}
+
+// Draw
+ctx.fillStyle = '#0a0a0a';
+ctx.fillRect(0, 0, W, H);
+
+// Draw relevance field (heat map)
+for (let i = 0; i < W; i += 4) {
+  for (let j = 0; j < H; j += 4) {
+    const x = i / W, y = j / H;
+    let totalR = 0;
+    for (const h of hands) {
+      const dx = x - h.x, dy = y - h.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      totalR += Math.max(0, 1 - d * 3);
+    }
+    if (totalR > 0.1) {
+      ctx.fillStyle = `rgba(192, 208, 255, ${Math.min(0.15, totalR * 0.05)})`;
+      ctx.fillRect(i, j, 4, 4);
+    }
+  }
+}
+
+// Draw hands (diamonds)
+for (const h of hands) {
+  const px = h.x * W, py = h.y * H;
+  ctx.fillStyle = h.color;
+  ctx.beginPath();
+  ctx.moveTo(px, py - 8);
+  ctx.lineTo(px + 8, py);
+  ctx.lineTo(px, py + 8);
+  ctx.lineTo(px - 8, py);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(h.id, px, py - 12);
+}
+
+// Draw cells (dots)
+for (const c of cells) {
+  const px = c.x * W, py = c.y * H;
+  if (c.super) {
+    // Super-relevant: white outline, larger
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = c.hands.length === 3 ? '#ffd700' : '#c0d0ff';
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    const hand = hands.find(h => h.id === c.hands[0]);
+    ctx.fillStyle = hand ? hand.color : '#888';
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+</script>
+
+</body>
+</html>
