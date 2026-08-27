@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Eileen's Bridge — A Marine DAW</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════ TOP BAR ═══════════════════ -->
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">⛵</span>
+    <span class="name">Eileen's Bridge</span>
+    <span class="tag">a marine DAW · the Quilt, sailing</span>
+  </div>
+  <div class="transport">
+    <button id="btn-play" class="t-btn" title="Play">▶</button>
+    <button id="btn-pause" class="t-btn" title="Pause">⏸</button>
+    <button id="btn-stop" class="t-btn" title="Stop">⏹</button>
+    <button id="btn-record" class="t-btn" title="Record">⏺</button>
+    <span class="t-sep">|</span>
+    <span class="t-label">BPM</span>
+    <input id="bpm" type="number" min="30" max="600" value="120" class="t-input">
+    <span class="t-sep">|</span>
+    <span class="t-label">SAMPLE-RATE</span>
+    <select id="sample-rate" class="t-select">
+      <option value="1">1 Hz (every second)</option>
+      <option value="0.5">0.5 Hz (every 2s)</option>
+      <option value="0.1" selected>0.1 Hz (every 10s)</option>
+      <option value="0.033">0.033 Hz (every 30s)</option>
+      <option value="0.0167">0.0167 Hz (every minute)</option>
+    </select>
+    <span class="t-sep">|</span>
+    <span class="t-label">GATE</span>
+    <input id="gate" type="number" min="0" step="0.001" value="0.5" class="t-input t-input-small">
+    <span class="t-sep">|</span>
+    <span class="t-label">CLOCK</span>
+    <span id="clock" class="t-clock">--:--:--</span>
+    <span class="t-sep">|</span>
+    <span class="t-label">POS</span>
+    <span id="position" class="t-clock">0:0:0</span>
+  </div>
+</header>
+
+<!-- ═══════════════════ MAIN GRID ═══════════════════ -->
+<main class="grid">
+
+  <!-- COMPASS + AUTOPILOT HEAD -->
+  <section class="panel panel-compass" id="panel-compass">
+    <header>
+      <h2>Compass · Autopilot</h2>
+      <span class="track-state" data-track="compass">●</span>
+    </header>
+    <div class="compass-row">
+      <!-- Compass dial -->
+      <div class="compass-dial">
+        <canvas id="canvas-compass" width="320" height="320"></canvas>
+        <div class="compass-readout">
+          <div class="readout-line">
+            <span class="lbl">HDG</span>
+            <span id="heading-val" class="val">--</span>
+            <span class="unit">°M</span>
+          </div>
+          <div class="readout-line">
+            <span class="lbl">CMD</span>
+            <span id="commanded-val" class="val">--</span>
+            <span class="unit">°M</span>
+          </div>
+          <div class="readout-line">
+            <span class="lbl">ERR</span>
+            <span id="error-val" class="val">--</span>
+            <span class="unit">°</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autopilot head -->
+      <div class="autopilot-head">
+        <h3>Autopilot Head</h3>
+        <div class="ap-control">
+          <div class="knob-row">
+            <label>DEADBAND</label>
+            <input type="range" id="deadband" min="1" max="20" step="1" value="5">
+            <span id="deadband-val">5°</span>
+          </div>
+          <div class="knob-row">
+            <label>WAKE</label>
+            <input type="range" id="wake-delay" min="0" max="20" step="0.5" value="2">
+            <span id="wake-delay-val">2.0s</span>
+          </div>
+          <div class="knob-row">
+            <label>GAIN</label>
+            <input type="range" id="ap-gain" min="0" max="100" step="1" value="50">
+            <span id="ap-gain-val">50%</span>
+          </div>
+          <div class="knob-row">
+            <label>YAW-DAmp</label>
+            <input type="range" id="yaw-damp" min="0" max="100" step="1" value="40">
+            <span id="yaw-damp-val">40%</span>
+          </div>
+        </div>
+        <div class="rudder-indicator">
+          <h4>Rudder</h4>
+          <div class="rudder-bar">
+            <div class="rudder-center"></div>
+            <div id="rudder-needle" class="rudder-needle"></div>
+          </div>
+          <div class="rudder-readout">
+            <span id="rudder-val">0°</span>
+          </div>
+        </div>
+        <div class="wake-zone">
+          <h4>Wake Zone (autopilot deadband)</h4>
+          <div class="wake-ring">
+            <canvas id="canvas-wake" width="280" height="280"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOUNDER (oscilloscope + echogram) -->
+  <section class="panel panel-sounder" id="panel-sounder">
+    <header>
+      <h2>Sounder · Echogram · Oscilloscope</h2>
+      <span class="track-state" data-track="sounder">●</span>
+    </header>
+    <div class="sounder-tabs">
+      <button class="stab active" data-mode="echogram">Echogram</button>
+      <button class="stab" data-mode="oscilloscope">Oscilloscope</button>
+      <button class="stab" data-mode="split">Split</button>
+    </div>
+    <div class="sounder-canvases">
+      <canvas id="canvas-echogram" width="640" height="280"></canvas>
+      <canvas id="canvas-oscilloscope" width="640" height="280"></canvas>
+    </div>
+    <div class="sounder-readout">
+      <div><span class="lbl">DEPTH</span> <span id="depth-val" class="val">--</span> <span class="unit">m</span></div>
+      <div><span class="lbl">RANGE</span>
+        <select id="sounder-range" class="t-select">
+          <option>0-30 m</option>
+          <option selected>0-100 m</option>
+          <option>0-300 m</option>
+          <option>0-1000 m</option>
+        </select>
+      </div>
+      <div><span class="lbl">FREQ</span>
+        <select id="sounder-freq" class="t-select">
+          <option>50 kHz</option>
+          <option selected>200 kHz</option>
+          <option>455 kHz</option>
+        </select>
+      </div>
+      <div><span class="lbl">GAIN</span>
+        <input type="range" id="sounder-gain" min="0" max="100" value="65">
+        <span id="sounder-gain-val">65</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- GPS / NAV CHART -->
+  <section class="panel panel-gps" id="panel-gps">
+    <header>
+      <h2>GPS · Nav Chart</h2>
+      <span class="track-state" data-track="gps">●</span>
+    </header>
+    <div class="gps-wrap">
+      <canvas id="canvas-navchart" width="540" height="380"></canvas>
+      <div class="gps-readout">
+        <div><span class="lbl">LAT</span> <span id="lat-val" class="val">--</span></div>
+        <div><span class="lbl">LON</span> <span id="lon-val" class="val">--</span></div>
+        <div><span class="lbl">SOG</span> <span id="sog-val" class="val">--</span> <span class="unit">kt</span></div>
+        <div><span class="lbl">COG</span> <span id="cog-val" class="val">--</span> <span class="unit">°T</span></div>
+        <div><span class="lbl">WAYPOINT</span> <span id="wp-val" class="val">--</span></div>
+        <div><span class="lbl">DIST</span> <span id="dist-val" class="val">--</span> <span class="unit">nm</span></div>
+        <div><span class="lbl">ETA</span> <span id="eta-val" class="val">--</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAMERAS / DAW SYNOPTIC -->
+  <section class="panel panel-cams" id="panel-cams">
+    <header>
+      <h2>Cameras · DAW Synoptic</h2>
+      <span class="track-state" data-track="cameras">●</span>
+    </header>
+    <div class="cam-mode">
+      <button class="cmode active" data-cmode="grid">Grid</button>
+      <button class="cmode" data-cmode="synoptic">Synoptic</button>
+      <button class="cmode" data-cmode="single">Single</button>
+    </div>
+    <div class="cam-area" id="cam-area">
+      <!-- populated by JS -->
+    </div>
+    <div class="cam-selector">
+      <label><input type="checkbox" class="cam-tick" value="bow" checked> Bow</label>
+      <label><input type="checkbox" class="cam-tick" value="stern" checked> Stern</label>
+      <label><input type="checkbox" class="cam-tick" value="port" checked> Port</label>
+      <label><input type="checkbox" class="cam-tick" value="stbd" checked> Stbd</label>
+      <label><input type="checkbox" class="cam-tick" value="engineroom"> Engine</label>
+      <label><input type="checkbox" class="cam-tick" value="wheelhouse"> Wheelhouse</label>
+    </div>
+  </section>
+
+  <!-- DAW MIXER / TRACK LIST -->
+  <section class="panel panel-mixer" id="panel-mixer">
+    <header>
+      <h2>Mixer · Track List (the Cell Bus)</h2>
+      <button id="btn-add-track" class="t-btn-small">+ Add Track</button>
+    </header>
+    <div class="mixer-list" id="mixer-list">
+      <!-- populated by JS -->
+    </div>
+  </section>
+
+  <!-- DAW ARRANGEMENT / TIMELINE -->
+  <section class="panel panel-arrangement" id="panel-arrangement">
+    <header>
+      <h2>Arrangement · Timeline (deltas only)</h2>
+      <span id="arr-time-cursor" class="t-clock">0:00</span>
+    </header>
+    <div class="arrangement-scroll" id="arrangement-scroll">
+      <canvas id="canvas-arrangement" width="2400" height="320"></canvas>
+    </div>
+    <div class="arr-legend">
+      <span><span class="dot dot-compass"></span> compass</span>
+      <span><span class="dot dot-sounder"></span> sounder</span>
+      <span><span class="dot dot-gps"></span> gps</span>
+      <span><span class="dot dot-cam"></span> camera-tick</span>
+      <span><span class="dot dot-rudder"></span> rudder</span>
+      <span><span class="dot dot-ap"></span> autopilot</span>
+      <span><span class="dot dot-sym"></span> symmetry-event</span>
+    </div>
+  </section>
+
+  <!-- EVENT LOG (the canon) -->
+  <section class="panel panel-log" id="panel-log">
+    <header>
+      <h2>Event Log · The Canon</h2>
+      <button id="btn-clear-log" class="t-btn-small">Clear</button>
+    </header>
+    <div class="log-list" id="log-list"></div>
+  </section>
+
+  <!-- ENGINE / SUBSTRATE -->
+  <section class="panel panel-engine" id="panel-engine">
+    <header>
+      <h2>Engine · Substrate</h2>
+      <span class="track-state" data-track="engine">●</span>
+    </header>
+    <div class="engine-readout">
+      <div><span class="lbl">RPM</span> <span id="rpm-val" class="val">--</span></div>
+      <div><span class="lbl">TEMP</span> <span id="temp-val" class="val">--</span> <span class="unit">°C</span></div>
+      <div><span class="lbl">OIL-P</span> <span id="oilp-val" class="val">--</span> <span class="unit">psi</span></div>
+      <div><span class="lbl">FUEL</span> <span id="fuel-val" class="val">--</span> <span class="unit">%</span></div>
+      <div><span class="lbl">BATT</span> <span id="batt-val" class="val">--</span> <span class="unit">V</span></div>
+      <div><span class="lbl">HOURS</span> <span id="hours-val" class="val">--</span></div>
+    </div>
+    <div class="engine-history">
+      <canvas id="canvas-engine" width="540" height="120"></canvas>
+    </div>
+  </section>
+
+  <!-- WEATHER -->
+  <section class="panel panel-weather" id="panel-weather">
+    <header>
+      <h2>Weather</h2>
+      <span class="track-state" data-track="weather">●</span>
+    </header>
+    <div class="weather-readout">
+      <div><span class="lbl">WIND</span> <span id="wind-val" class="val">--</span> <span class="unit">kt</span></div>
+      <div><span class="lbl">WIND-DIR</span> <span id="winddir-val" class="val">--</span></div>
+      <div><span class="lbl">AIR-T</span> <span id="airt-val" class="val">--</span> <span class="unit">°C</span></div>
+      <div><span class="lbl">BARO</span> <span id="baro-val" class="val">--</span> <span class="unit">hPa</span></div>
+      <div><span class="lbl">SEA-T</span> <span id="seat-val" class="val">--</span> <span class="unit">°C</span></div>
+    </div>
+  </section>
+
+  <!-- SYMMETRY DETECTOR -->
+  <section class="panel panel-symmetry" id="panel-symmetry">
+    <header>
+      <h2>Symmetry Finder · Async Alignments</h2>
+      <span class="track-state" data-track="symmetry">●</span>
+    </header>
+    <div class="sym-list" id="sym-list"></div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <span>Eileen's Bridge</span>
+  <span>·</span>
+  <span>the Quilt, sailing</span>
+  <span>·</span>
+  <span>each piece of information is a cell</span>
+  <span>·</span>
+  <span>deltas are the TICKs</span>
+  <span>·</span>
+  <span>the cowgirl rides the Quilt</span>
+</footer>
+
+<script src="daw-engine.js"></script>
+<script src="sounder.js"></script>
+<script src="compass.js"></script>
+<script src="gps.js"></script>
+<script src="cameras.js"></script>
+<script src="engine.js"></script>
+<script src="arrangement.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
