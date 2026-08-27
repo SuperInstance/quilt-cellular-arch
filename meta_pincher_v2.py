@@ -382,7 +382,7 @@ def ask(query, top_k=3, model="llama8b", index=DEFAULT_INDEX, verbose=False):
 
 
 # ─── THE SIMULATOR ───
-def simulate(n_questions=5, n_cycles=1):
+def simulate(n_questions=5, n_cycles=1, no_sleep=False):
     """Run the simulator: cycles of n_questions, all 3 stages, full diagnostics."""
     questions = [
         "What is the Splined Lantern?",
@@ -426,6 +426,8 @@ def simulate(n_questions=5, n_cycles=1):
                 meta = m.get('metadata', {})
                 print(f"   ({meta.get('title','?')} — {meta.get('path','?')}, score={m.get('score',0):.2f})")
             print()
+            if not no_sleep:
+                time.sleep(0.5)  # be nice when CF is alive
 
 
 # ─── DEMO + CLI ───
@@ -444,6 +446,8 @@ if __name__ == "__main__":
                         help="Just scout the API; don't run the pipeline.")
     parser.add_argument("--n-questions", type=int, default=5)
     parser.add_argument("--n-cycles", type=int, default=1)
+    parser.add_argument("--no-sleep", action="store_true",
+                        help="Skip rate-limit sleeps (simulator mode only).")
     args = parser.parse_args()
 
     if args.scout:
@@ -465,4 +469,4 @@ if __name__ == "__main__":
             "timing_ms": round(r["timing"]["total"] * 1000, 1),
         }, indent=2))
     else:
-        simulate(n_questions=args.n_questions, n_cycles=args.n_cycles)
+        simulate(n_questions=args.n_questions, n_cycles=args.n_cycles, no_sleep=args.no_sleep)

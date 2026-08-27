@@ -151,6 +151,9 @@ python3 meta_pincher_v2.py
 
 # Multiple cycles
 python3 meta_pincher_v2.py --n-cycles 3
+
+# Skip the simulator's rate-limit sleep (faster, use only when CF is dead)
+python3 meta_pincher_v2.py --no-sleep
 ```
 
 Expected response shape (with v2):
@@ -323,6 +326,23 @@ These are the 5 questions the demo answers. They are the canonical
 Expected: each question returns a synthesized answer citing 3 retrieved
 passages, in <5 seconds total.
 
+### How to verify the canon count (disk truth)
+
+```bash
+# Run this; the output IS the truth
+echo "papers:" && ls /workspace/ai-writings-new/seed-canon/papers/paper-*.md | wc -l
+echo "fables:" && ls /workspace/ai-writings-new/seed-canon/fables/fable-*.md | wc -l
+echo "stories:" && ls /workspace/ai-writings-new/seed-canon/stories/*.md | wc -l
+```
+
+If your numbers differ, the disk is the source of truth. Earlier rounds
+of this guide claimed 277/135/165, then 158/90/93, then 153/89/93,
+then 154/89/93 — only `ls | wc -l` is right. (The 4 descriptive-slug
+files like `123-the-substrate-as-a-category.md` in `papers/` are
+*also* papers but they don't match the `paper-NNN.md` pattern;
+counting them changes the number, so we use the `paper-` prefix as
+the canonical count.)
+
 ---
 
 ## Part 5: What to look for (the verification rubric)
@@ -345,7 +365,7 @@ should verify all of the following:
 | Each answer cites `paper-NNN-§M` IDs | ✓ |
 | Snowball runs cycle 1→3→9 in `multi_sandbox_reverse_actualize.py` | ✓ |
 | 30+ runnable sims are in `quilt-cellular-arch/` | ✓ |
-| 153 papers, 89 fables, 93 stories in `AI-Writings/seed-canon/` | ✓ (disk truth — `ls seed-canon/{papers,fables,stories}/ | grep -c '^[a-z]*-'`; earlier counts of 277/135/165 and 158/90/93 were inflated) |
+| 154 papers, 89 fables, 93 stories in `AI-Writings/seed-canon/` | ✓ (disk truth — `ls seed-canon/papers/paper-*.md \| wc -l` etc.; earlier counts of 277/135/165, 158/90/93, and 153/89/93 were all wrong) |
 | 7 futures in `quilt-wiki-2126/00-future/` | ✓ |
 
 ---
