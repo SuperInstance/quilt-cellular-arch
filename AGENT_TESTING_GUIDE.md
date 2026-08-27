@@ -286,7 +286,7 @@ should verify all of the following:
 
 | Check | Expected |
 |---|---|
-| Page loads at the public URL | https://p7rcqnyb57rj.space.minimax.io |
+| Page loads at the public URL | https://p7rcqny4b57rj.space.minimax.io |
 | 8 sections render in order | ✓ |
 | Pincher diagram has 3 cards | ✓ |
 | Status bar reads "Vectorized canon already loaded..." | ✓ |
@@ -308,7 +308,7 @@ should verify all of the following:
 
 | Symptom | Fix |
 |---|---|
-| Page won't load | Check https://p7rcqnyb57rj.space.minimax.io is reachable |
+| Page won't load | Check https://p7rcqny4b57rj.space.minimax.io is reachable |
 | 404 on repo | `git pull` the latest from main |
 | CF API returns 400 | Embedding model rate-limited; use `meta_pincher_demo.py` (local fallback) |
 | CF API returns 401 | Check `CF_API_TOKEN` is set and has Workers AI + Vectorize scopes |
