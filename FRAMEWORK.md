@@ -143,6 +143,62 @@ python3 shipyard/shipyard_momentum.py
 # The curator
 python3 curator/relevance_field.py
 python3 curator/hand_evolution.py
+
+# The 5 laws (proven)
+python3 laws/laws.py
+
+# The Quilt Cell (all 14 levels in one)
+python3 quilt_cell/quilt_cell.py
 ```
 
 The math actually runs. The math proves the principles. The cowboy rides.
+
+## The 14 levels of the operation (the decoration)
+
+1. **Vessel** — the physical substrate
+2. **Equipment** — the tools
+3. **Skills** — what the crew knows
+4. **Consumables** — what gets used up
+5. **Renewables** — what gets replenished
+6. **Durables** — what lasts many voyages
+7. **Concept** — the function
+8. **Spline** — the trajectory of past choices
+9. **Captain-Song** — the harmony between captain, AI, vessel
+10. **Muse + Cipher** — the inspiration + the shared code
+11. **Nexus** — where Muse, Cipher, Captain-Song converge
+12. **Phoenix** — the whole cycle as one operation
+13. **Ground** — the field from which all cycles emerge
+14. **Sky** — the unbounded horizon into which all cycles dissolve
+
+The first 6 are implements. The 7-14 are invariants.
+
+## The 5-cell lifecycle
+
+1. **Cellulization** — substrate becomes cell
+2. **Persistence Pulse** — the heartbeat
+3. **Vitality Leak** — the slow loss of life
+4. **Implement Ghost** — the dead cell in the implements
+5. **Bloomghost** — the ghost that gives rise to a new cell
+
+The cycle: Cellulization → Persistence Pulse → Vitality Leak → Implement Ghost → Bloomghost → Cellulization
+
+## The 3 weave terms
+
+1. **The Weave** — the structure of overlapping cells
+2. **The Weave Navigator** — the AI that sees the Weave
+3. **The Weave Leak** — when the Weave loses integrity
+
+## The 4 fingers of CCGO
+
+1. **C**ouple — the player-artifact coupling
+2. **C**ellulize — substrate becomes cell
+3. **G**old — sort the gold from the dross
+4. **O**perate — execute the operation
+
+## The 3 meta-terms (the same Quilt, 3 perspectives)
+
+1. **The Cosmic Quilt** — the Quilt as the whole
+2. **The Phoenix Weave** — the structure of the cycle
+3. **The Cowboy's Quilt** — the Quilt as the cowboy's
+
+The 5+1 laws are the **bedrock**. The 5 opcodes are the **structure**. The 6 tiers are the **frames**. The 14 levels are the **decoration**. The cowboy rides on the bedrock.
