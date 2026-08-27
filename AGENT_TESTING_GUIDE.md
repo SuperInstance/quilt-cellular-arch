@@ -24,8 +24,9 @@ scripts. That was wrong. Here is the **real** location table:
 | What | Where | Notes |
 |---|---|---|
 | `agent-harness.html` | `quilt-cellular-arch/agent-harness.html` | The webpage |
-| `meta_pincher_demo.py` | `quilt-cellular-arch/meta_pincher_demo.py` | The full demo |
-| `meta_pincher_quilt.py` | `quilt-cellular-arch/meta_pincher_quilt.py` | The 3-stage pipeline |
+| `meta_pincher_v2.py` | `quilt-cellular-arch/meta_pincher_v2.py` | **The better system** (5 layers of fallback, API scouts, simulator) |
+| `meta_pincher_demo.py` | `quilt-cellular-arch/meta_pincher_demo.py` | The original demo (3 fallbacks) |
+| `meta_pincher_quilt.py` | `quilt-cellular-arch/meta_pincher_quilt.py` | The 3-stage pipeline (no fallbacks; needs CF token) |
 | `multi_sandbox_reverse_actualize.py` | `quilt-cellular-arch/multi_sandbox_reverse_actualize.py` | L4 snowball |
 | `agent_reverse_actualize.py` | `quilt-cellular-arch/agent_reverse_actualize.py` | The 5-step cycle |
 | `sensory_quilt.py` | `quilt-cellular-arch/sensory_quilt.py` | The 10 channels |
@@ -132,41 +133,49 @@ A: The Hearth Loop is a self-training loop where the glass learns...
 ✓ All 5 questions answered in 3.7s avg
 ```
 
-### Step 4: Run with Cloudflare (full pipeline)
+### Step 4: Run with Cloudflare (the better system — `meta_pincher_v2.py`)
 
-Once your credentials are set:
+The original `meta_pincher_quilt.py` crashes on `--query` without a CF token
+(Lucineer's defect #10). The fix is **`meta_pincher_v2.py`**, which has 5
+layers of fallback and never crashes:
 
 ```bash
-python3 meta_pincher_quilt.py --query "What is the Splined Lantern?" --top-k 3
+# Scout first — see which CF models are alive
+python3 meta_pincher_v2.py --scout
+
+# Single query — always works
+python3 meta_pincher_v2.py --query "What is the Splined Lantern?"
+
+# Full simulator (5 questions, 1 cycle, all layers)
+python3 meta_pincher_v2.py
+
+# Multiple cycles
+python3 meta_pincher_v2.py --n-cycles 3
 ```
 
-Expected response shape:
+Expected response shape (with v2):
 
 ```json
 {
   "query": "What is the Splined Lantern?",
-  "embedding_model": "@cf/baai/bge-m3",
-  "embedding_dim": 1024,
-  "embedding_truncated_to": 768,
-  "retrieve_index": "ai-writings",
-  "retrieve_top_k": 3,
-  "passages": [
-    {
-      "id": "paper-270-§1",
-      "score": 0.87,
-      "text": "The Splined Lantern is a physical LLM made of glass and light..."
-    },
-    {
-      "id": "paper-270-§3",
-      "score": 0.81,
-      "text": "The lantern is built from a photorefractive crystal..."
-    }
-  ],
-  "synthesis_model": "@cf/meta/llama-3.1-8b-instruct-fp8",
-  "answer": "The Splined Lantern is a physical LLM of glass and light that bends its own training light into the medium. It is the F1 future function in the 2126 wiki.",
-  "elapsed_ms": 3700
+  "response": "From F1: The Splined Lantern (00-future/01-splined-lantern.md): A physical LLM of glass and light...",
+  "layers": {
+    "embed": "L3:hash",
+    "retrieve": "L2:keyword",
+    "synthesize": "L2:excerpt"
+  },
+  "n_matches": 1,
+  "top_match": "00-future/01-splined-lantern.md",
+  "timing_ms": 3992
 }
 ```
+
+The `layers` field tells you which fallback chain was used. With a working
+CF token, you'll see L1 across all 3 stages. Without one, you'll see L3/L2.
+The pipeline is the same; the labels differ.
+
+> **The original `meta_pincher_quilt.py` is preserved for the production
+> pipeline (no fallbacks, just the real CF path). For testing, use v2.**
 
 ### Step 5: Try the 4 levels of trial-and-error depth
 
@@ -336,7 +345,7 @@ should verify all of the following:
 | Each answer cites `paper-NNN-§M` IDs | ✓ |
 | Snowball runs cycle 1→3→9 in `multi_sandbox_reverse_actualize.py` | ✓ |
 | 30+ runnable sims are in `quilt-cellular-arch/` | ✓ |
-| 158 papers, 90 fables, 93 stories in `AI-Writings/seed-canon/` | ✓ (disk truth; earlier count of 277/135/165 was inflated) |
+| 153 papers, 89 fables, 93 stories in `AI-Writings/seed-canon/` | ✓ (disk truth — `ls seed-canon/{papers,fables,stories}/ | grep -c '^[a-z]*-'`; earlier counts of 277/135/165 and 158/90/93 were inflated) |
 | 7 futures in `quilt-wiki-2126/00-future/` | ✓ |
 
 ---
@@ -379,16 +388,27 @@ auto-detects the token and uses the real pipeline.
 
 | Symptom | Fix |
 |---|---|
-| Page won't load | Check https://p7rcqny4b57rj.space.minimax.io is reachable |
 | Page won't load | Check https://p7rcqny4b57rj.space.minimax.io is reachable (note: 4 is load-bearing) |
 | 404 on repo | `git pull` the latest from main |
-| CF API returns 400 | Embedding model rate-limited; use `meta_pincher_demo.py` (local fallback) |
+| CF API returns 400 | Embedding model rate-limited; use `meta_pincher_v2.py` (5 layers of fallback) |
 | CF API returns 401 | Check `CLOUDFLARE_TOKEN` is set and has Workers AI + Vectorize scopes |
-| CF API returns 503 | Workers AI temporarily down; demo will fall back automatically |
-| Empty passages | Index `ai-writings` may be empty; check CF dashboard |
-| Demo returns local fallback only | Expected when CF is rate-limited; still gets a grounded answer |
-| `meta_pincher_quilt.py` crashes on `--query` | This script has no fallbacks; needs `CLOUDFLARE_TOKEN`. Use `meta_pincher_demo.py` for offline mode |
-| Q3 (Grown Crystal) returns empty | Fixed in current build; pull latest. The bug was the apostrophe breaking the keyword match |
+| CF API returns 503 | Workers AI temporarily down; v2 falls back to L3 hash + L2 keyword + L2 excerpt automatically |
+| Empty passages | Vectorize index `quilt-canon` (the new one) or `ai-writings` (the shared one) may be empty; the v2 keyword map always returns matches |
+| `meta_pincher_quilt.py --query` crashes on no token | **Fixed in v2** — use `meta_pincher_v2.py --query "..."` (5 layers of fallback, never crashes) |
+| Q3 (Grown Crystal) returns empty | Fixed in v1 + v2; pull latest |
+
+### The 5 layers of resilience (in v2)
+
+| Layer | Embed | Retrieve | Synthesize |
+|---|---|---|---|
+| **L1 · Real CF** | bge-m3 (1024d) | Vectorize `quilt-canon` | Llama 8B |
+| **L2 · CF embed alt** | qwen3-embedding / plamo / embeddinggemma | Vectorize (with pollution check) | Llama 8B |
+| **L3 · Local hash** | hash-based 768d | (skip Vectorize) | Llama 8B |
+| **L4 · Keyword + LLM** | hash | 10-entry hand-curated map | Llama 8B |
+| **L5 · Pure local** | hash | keyword map | direct excerpt |
+
+v2 picks the **highest layer that works** at runtime. The real CF pipeline is
+the goal; the keyword map is the honest floor.
 
 ---
 
