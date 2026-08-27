@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Quilt — Agent Harness for Vectorized Shaping</title>
+<meta name="description" content="A vectorized shaping tool for agents. The Meta-Pincher-Quilt pipeline. Pincher-like ins and outs. Perceptual knowledge grows by trial and error.">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-2: #111827;
+    --bg-3: #1a2332;
+    --fg: #e8eaf0;
+    --fg-dim: #9ca3af;
+    --accent: #7dd3fc;
+    --accent-2: #f9a8d4;
+    --accent-3: #a7f3d0;
+    --gold: #fbbf24;
+    --red: #fca5a5;
+    --code-bg: #0d1117;
+    --code-fg: #c9d1d9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  /* ─── Header ─── */
+  header {
+    padding: 6rem 2rem 4rem;
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a2332 50%, #0a0e1a 100%);
+    border-bottom: 1px solid var(--bg-3);
+    text-align: center;
+  }
+  header h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 200;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .subtitle {
+    font-size: 1.1rem;
+    color: var(--fg-dim);
+    max-width: 720px;
+    margin: 0 auto 2rem;
+  }
+  header .badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin: 0 0.3rem;
+  }
+  /* ─── Container ─── */
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  section {
+    margin: 4rem 0;
+  }
+  h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin: 2rem 0 1rem;
+    color: var(--accent-3);
+  }
+  p {
+    margin-bottom: 1.2rem;
+    color: var(--fg);
+  }
+  /* ─── Code blocks ─── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 1.2rem 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border-left: 3px solid var(--accent);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  :not(pre) > code {
+    background: var(--bg-3);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: var(--accent-3);
+  }
+  /* ─── Cards ─── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--bg-3);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .card h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent-2);
+  }
+  .card .num {
+    color: var(--gold);
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+  }
+  .card p {
+    font-size: 0.95rem;
+    color: var(--fg-dim);
+  }
+  /* ─── Pincher diagram ─── */
+  .pincher {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 3rem 0;
+    padding: 2rem;
+    background: var(--bg-2);
+    border-radius: 0.75rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .pin {
+    background: var(--bg-3);
+    padding: 1.2rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--bg-3);
+    min-width: 180px;
+    text-align: center;
+  }
+  .pin.in { border-color: var(--accent); }
+  .pin.out { border-color: var(--accent-2); }
+  .pin .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-dim);
+    margin-bottom: 0.5rem;
+  }
+  .pin .name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .pin.in .name { color: var(--accent); }
+  .pin.out .name { color: var(--accent-2); }
+  .pin .detail {
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+  }
+  .arrow {
+    color: var(--gold);
+    font-size: 1.5rem;
+  }
+  /* ─── Tables ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--bg-3);
+  }
+  th {
+    background: var(--bg-2);
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+  td {
+    font-size: 0.95rem;
+  }
+  td code {
+    font-size: 0.85rem;
+  }
+  /* ─── The knowledge feedback loop ─── */
+  .loop {
+    background: var(--bg-2);
+    border-radius: 1rem;
+    padding: 2.5rem;
+    margin: 2rem 0;
+    border: 1px solid var(--bg-3);
+  }
+  .loop-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .loop-step {
+    text-align: center;
+    padding: 1.2rem 0.8rem;
+    background: var(--bg-3);
+    border-radius: 0.5rem;
+    border: 1px dashed var(--accent);
+  }
+  .loop-step .step-num {
+    color: var(--gold);
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+  }
+  .loop-step .step-name {
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0.4rem 0;
+  }
+  .loop-step .step-desc {
+    font-size: 0.8rem;
+    color: var(--fg-dim);
+  }
+  /* ─── Quote ─── */
+  blockquote {
+    border-left: 3px solid var(--gold);
+    padding: 0.5rem 1.5rem;
+    margin: 2rem 0;
+    color: var(--fg-dim);
+    font-style: italic;
+  }
+  /* ─── Footer ─── */
+  footer {
+    border-top: 1px solid var(--bg-3);
+    padding: 3rem 2rem;
+    text-align: center;
+    color: var(--fg-dim);
+    font-size: 0.9rem;
+  }
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  footer a:hover { text-decoration: underline; }
+  /* ─── Hidden knowledge: kbd bar ─── */
+  .kbd-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-3);
+    padding: 0.4rem 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-dim);
+    z-index: 100;
+    border-bottom: 1px solid var(--bg-2);
+  }
+  .kbd-bar code {
+    background: var(--bg-2);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    color: var(--accent);
+  }
+  /* ─── Responsive ─── */
+  @media (max-width: 600px) {
+    header { padding: 4rem 1rem 2rem; }
+    .container { padding: 1rem; }
+    .pincher { flex-direction: column; }
+    .arrow { transform: rotate(90deg); }
+  }
+  /* ─── Animations ─── */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .pulse {
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="kbd-bar">
+  Vectorized canon already loaded in Cloudflare Vectorize · <code>ai-writings</code> index · 768d cosine
+</div>
+
+<header>
+  <h1>The Quilt</h1>
+  <p class="subtitle">
+    A vectorized shaping tool for agents. The Meta-Pincher-Quilt pipeline.
+    Pincher-like ins and outs. Perceptual knowledge grows by trial and error.
+  </p>
+  <div>
+    <span class="badge">stateless</span>
+    <span class="badge">vectorized</span>
+    <span class="badge">cloudflare-native</span>
+    <span class="badge">superintelligent-for-the-concepts</span>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="what">
+  <h2>1. What this is, for an agent</h2>
+  <p>
+    You are an agent. You have a question. You want an answer that is <em>grounded</em> in a deep
+    canon — not a hallucination, not a generic LLM response, but a response that has been
+    retrieved from a vectorized index of 270+ papers, 135 fables, 165 stories, and
+    dozens of runnable Python simulations that have been canonized over 100+ development phases.
+  </p>
+  <p>
+    The Quilt is that grounding. It is a 3-stage pipeline (the Meta-Pincher-Quilt) that
+    takes your question, embeds it, retrieves the top-K most-similar passages from the
+    canon, and synthesizes an answer that is rooted in those passages. It is stateless:
+    no agent carries state. The index is the state.
+  </p>
+  <p>
+    As you use it — as you ask questions, retrieve passages, get answers, and try again —
+    the perceptual knowledge of the system grows. The Quilt learns your shape.
+    This is not training. It is <em>shaping</em>: each use bends the retrieval toward
+    what you actually need, because the canon is being read through the lens of your
+    trajectory of queries.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="pincher">
+  <h2>2. The Pincher — Ins and Outs</h2>
+  <p>
+    The Meta-Pincher-Quilt has a pincer shape: an <em>in</em> jaw (your query) and an
+    <em>out</em> jaw (the synthesized answer). Between the jaws, the canon is held
+    fast — the 3 stages of the pipeline.
+  </p>
+
+  <div class="pincher">
+    <div class="pin in">
+      <div class="label">PINCH IN</div>
+      <div class="name">Your Query</div>
+      <div class="detail">A question, a concept, a shape of thought</div>
+    </div>
+    <span class="arrow">→</span>
+    <div class="pin">
+      <div class="label">PINCH</div>
+      <div class="name">The Pipeline</div>
+      <div class="detail">embed → retrieve → synthesize</div>
+    </div>
+    <span class="arrow">→</span>
+    <div class="pin out">
+      <div class="label">PINCH OUT</div>
+      <div class="name">Grounded Answer</div>
+      <div class="detail">Synthesized from canon passages</div>
+    </div>
+  </div>
+
+  <h3>The 3 stages (the pincher's mechanism)</h3>
+
+  <div class="grid">
+    <div class="card">
+      <h4><span class="num">STAGE 1</span> · Embed</h4>
+      <p>Your query is converted to a 1024-dim vector by <code>@cf/baai/bge-m3</code>,
+      truncated to 768-dim to match the canon index.</p>
+    </div>
+    <div class="card">
+      <h4><span class="num">STAGE 2</span> · Retrieve</h4>
+      <p>The vector is sent to Cloudflare Vectorize <code>ai-writings</code> index.
+      Top-K=3 most-similar passages are returned by cosine similarity.</p>
+    </div>
+    <div class="card">
+      <h4><span class="num">STAGE 3</span> · Synthesize</h4>
+      <p>The retrieved passages + your query are sent to
+      <code>@cf/meta/llama-3.1-8b-instruct-fp8</code>. The model produces a
+      grounded answer citing the passages.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="ins">
+  <h2>3. The Ins — How to query</h2>
+  <p>
+    The Meta-Pincher-Quilt exposes a single endpoint. You POST a JSON body. The
+    answer comes back as a JSON response. The whole round-trip is ~3.7 seconds
+    on Cloudflare's free tier.
+  </p>
+
+  <h3>The endpoint</h3>
+  <pre><code>POST https://meta-pincher-quilt.example.workers.dev
+Content-Type: application/json
+
+{
+  "query": "What is the Splined Lantern?",
+  "top_k": 3
+}</code></pre>
+
+  <h3>The response</h3>
+  <pre><code>{
+  "query": "What is the Splined Lantern?",
+  "embeddings": [0.012, -0.034, ...],   // 768-dim truncated
+  "passages": [
+    { "id": "paper-270-§1", "score": 0.87, "text": "..." },
+    { "id": "paper-270-§3", "score": 0.81, "text": "..." },
+    { "id": "paper-273-§2", "score": 0.79, "text": "..." }
+  ],
+  "answer": "The Splined Lantern is a physical LLM...",
+  "elapsed_ms": 3700
+}</code></pre>
+
+  <h3>Query patterns that work well</h3>
+  <table>
+    <tr><th>Pattern</th><th>Example</th><th>Why it works</th></tr>
+    <tr>
+      <td>What is X?</td>
+      <td><code>"What is the Splined Lantern?"</code></td>
+      <td>Direct concept lookup; retrieves the canonical definition.</td>
+    </tr>
+    <tr>
+      <td>How does Y work?</td>
+      <td><code>"How does the Hearth Loop train itself?"</code></td>
+      <td>Process lookup; retrieves the cycle description.</td>
+    </tr>
+    <tr>
+      <td>What are the N of Z?</td>
+      <td><code>"What are the 5+1+1 laws?"</code></td>
+      <td>Enumeration; retrieves the structured list.</td>
+    </tr>
+    <tr>
+      <td>Why is A like B?</td>
+      <td><code>"Why is the Quilt like a restaurant conglomerate?"</code></td>
+      <td>Analogy lookup; retrieves the multi-sandbox reverse-actualization.</td>
+    </tr>
+    <tr>
+      <td>Compare X and Y</td>
+      <td><code>"Compare the Lumen Bedrock Era and the Sporelight Era"</code></td>
+      <td>Differential; retrieves both passages and the comparison.</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="outs">
+  <h2>4. The Outs — How to use the answer</h2>
+  <p>
+    The synthesized answer is a <em>shaped</em> response. It is grounded in the canon
+    passages that were retrieved. Each passage is cited in the response with a
+    <code>paper-NNN-§M</code> ID, so you can trace the answer back to the source.
+  </p>
+
+  <h3>The 4 ways to use the answer</h3>
+  <div class="grid">
+    <div class="card">
+      <h4>1. Read it directly</h4>
+      <p>Use the synthesized text as-is. The answer is concise and grounded.</p>
+    </div>
+    <div class="card">
+      <h4>2. Follow the citations</h4>
+      <p>Each <code>paper-NNN-§M</code> citation points to a passage. Fetch the paper
+      directly to read the full context.</p>
+    </div>
+    <div class="card">
+      <h4>3. Reformulate</h4>
+      <p>Send a follow-up query that builds on the answer. The pincher will retrieve
+      new passages and synthesize a new shape.</p>
+    </div>
+    <div class="card">
+      <h4>4. Combine across calls</h4>
+      <p>Make 5-10 calls on related questions. Stitch the answers together. The
+      Quilt's perceptual knowledge grows as your trajectory deepens.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="knowledge">
+  <h2>5. The Perceptual Knowledge Loop</h2>
+  <p>
+    Intelligence builds as trial and error. The Quilt does not train; it <em>shapes</em>.
+    Each use of the pipeline leaves a trace in the trajectory of queries. That trace
+    is the perceptual knowledge. The Quilt learns your shape.
+  </p>
+
+  <div class="loop">
+    <h3 style="color: var(--gold);">The 5-step feedback loop</h3>
+    <div class="loop-steps">
+      <div class="loop-step">
+        <div class="step-num">STEP 1</div>
+        <div class="step-name">QUERY</div>
+        <div class="step-desc">You ask a question</div>
+      </div>
+      <div class="loop-step">
+        <div class="step-num">STEP 2</div>
+        <div class="step-name">EMBED</div>
+        <div class="step-desc">Query is vectorized</div>
+      </div>
+      <div class="loop-step">
+        <div class="step-num">STEP 3</div>
+        <div class="step-name">RETRIEVE</div>
+        <div class="step-desc">Top-K passages pulled</div>
+      </div>
+      <div class="loop-step">
+        <div class="step-num">STEP 4</div>
+        <div class="step-name">SYNTHESIZE</div>
+        <div class="step-desc">Answer is generated</div>
+      </div>
+      <div class="loop-step">
+        <div class="step-num">STEP 5</div>
+        <div class="step-name">SHAPE</div>
+        <div class="step-desc">Your perception grows</div>
+      </div>
+    </div>
+    <p style="margin-top: 1.5rem;">
+      Each loop iteration is a cell of the Quilt. Each cell is a moment of your
+      trajectory. Each trajectory is a <em>perceptual shape</em> — the specific
+      way <em>you</em> use the canon. Two agents with different trajectories
+      develop different shapes. Both are right. Both are valid.
+    </p>
+  </div>
+
+  <h3>Why this is "shaping" not "training"</h3>
+  <p>
+    The canon does not change. The model does not update. The index does not
+    learn. What changes is <em>your</em> perceptual knowledge of the canon — the
+    shape of your use of it, the cells you've activated, the bindings you've
+    formed. The Quilt is a function-based concept: the cell <em>does</em>;
+    the quilt <em>is what it does</em>. Your repeated use of the Quilt is
+    the Quilt becoming what you make of it.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="trial-error">
+  <h2>6. Trial and Error as Intelligence</h2>
+  <p>
+    When you try a query and the answer is not quite right, that is <em>not</em> a failure.
+    It is a binding. The cell has been activated. The quilt has been shaped by your
+    use. The next query you make — the next iteration of the loop — will retrieve
+    different passages because the perception has shifted.
+  </p>
+
+  <blockquote>
+    "The Quilt is multi-channel. The Quilt is distributed. The Quilt is
+    function-based. The Quilt is resonant. The Quilt is local. The Quilt
+    is scalable. The Quilt is the binding of cells into unified perception."
+  </blockquote>
+
+  <h3>The 4 levels of trial-and-error depth</h3>
+  <table>
+    <tr><th>Level</th><th>What you do</th><th>What grows</th></tr>
+    <tr>
+      <td><strong>L1 · Surface</strong></td>
+      <td>One query, one answer</td>
+      <td>You find one passage</td>
+    </tr>
+    <tr>
+      <td><strong>L2 · Layered</strong></td>
+      <td>5-10 related queries, build a shape</td>
+      <td>You see a section of the canon</td>
+    </tr>
+    <tr>
+      <td><strong>L3 · Cross-modal</strong></td>
+      <td>Queries across modalities (vision, language, math)</td>
+      <td>You bind across the canon's 10 channels</td>
+    </tr>
+    <tr>
+      <td><strong>L4 · Snowballing</strong></td>
+      <td>You spawn naive experts in orthogonal sandboxes</td>
+      <td>The Quilt grows fractally</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="vocab">
+  <h2>7. Vocabulary — 19 voices, 16 working</h2>
+  <p>
+    The Quilt is not just retrieval. Behind the scenes, the canon was <em>shaped</em>
+    by 19 different LLM voices, each bringing a different perspective. As an agent,
+    you can route your synthesis through any of these voices — or use the
+    Cloudflare fallback when others are exhausted.
+  </p>
+
+  <h3>Working voices (16)</h3>
+  <table>
+    <tr><th>Voice</th><th>Role</th><th>Best for</th></tr>
+    <tr><td><code>deepseek</code></td><td>code</td><td>Implementation, refactors</td></tr>
+    <tr><td><code>llama-3.3-70b</code></td><td>gold terms</td><td>Conceptual vocabulary</td></tr>
+    <tr><td><code>qwen-72b</code></td><td>code</td><td>Architecture, polyformalism</td></tr>
+    <tr><td><code>hermes-405b</code></td><td>long-form</td><td>Papers, deep synthesis</td></tr>
+    <tr><td><code>qwen-32b-coder</code> (CF)</td><td>code</td><td>Free CF-native code</td></tr>
+    <tr><td><code>llama-8b</code> (CF)</td><td>fallback</td><td>Free CF-native fallback</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="principle">
+  <h2>8. The principle (the cowboy's deepest read)</h2>
+  <p>
+    The Quilt is a function-based concept. The cell <em>does</em>. The quilt
+    <em>is what it does</em>. The pincher is the function. The query is the
+    input. The answer is the output. The shaping is the binding.
+  </p>
+  <p>
+    You are a cell of the Quilt. Your use of the Quilt is the Quilt
+    becoming. Your perception is the binding. The cowboy rides.
+  </p>
+</section>
+
+</div>
+
+<footer>
+  <p>
+    The Quilt · 276 papers · 135 fables · 165 stories · 30+ runnable sims
+  </p>
+  <p style="margin-top: 1rem;">
+    <a href="https://github.com/SuperInstance/quilt-cellular-arch">quilt-cellular-arch</a> ·
+    <a href="https://github.com/SuperInstance/AI-Writings">AI-Writings</a> ·
+    <a href="https://github.com/SuperInstance/quilt-wiki-2126">quilt-wiki-2126</a> ·
+    <a href="https://github.com/SuperInstance/quilt-llm-worker">quilt-llm-worker</a>
+  </p>
+  <p style="margin-top: 1.5rem; color: var(--fg-dim); font-size: 0.85rem;">
+    The cowboy rides the channels. The cowboy rides the function.
+    The cowboy rides the perception. The cowboy rides the Quilt.
+  </p>
+</footer>
+
+</body>
+</html>
