@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Spline — Casey's 4 Boats</title>
+<style>
+  body {
+    background: #0a1929;
+    color: #e6f1ff;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    padding: 20px;
+  }
+  h1, h2 { color: #64ffda; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .plot {
+    background: #112240;
+    border: 1px solid #64ffda;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  svg { width: 100%; height: 500px; }
+  .axis-line { stroke: #495670; stroke-width: 1; }
+  .axis-label { fill: #8892b0; font-size: 12px; }
+  .spline-line { stroke: #64ffda; stroke-width: 3; fill: none; }
+  .data-point { fill: #ff6b6b; stroke: #fff; stroke-width: 2; cursor: pointer; }
+  .data-point:hover { fill: #ffd93d; r: 10; }
+  .data-label { fill: #ccd6f6; font-size: 11px; }
+  .step-zone { fill: rgba(100, 255, 218, 0.1); stroke: #64ffda; stroke-dasharray: 5,5; }
+  .legend { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+  .legend-color { width: 16px; height: 16px; border-radius: 50%; }
+  .info {
+    background: #112240;
+    border-left: 4px solid #64ffda;
+    padding: 15px;
+    margin: 20px 0;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .principle {
+    color: #ff6b6b;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>The Spline</h1>
+  <h2>Casey's 4 boats, the 1974 captain's 6-71N, and the projected step-forward zone</h2>
+
+  <div class="info">
+    <p>The <span class="principle">spline</span> is the trajectory of the captain's understanding. The spline passes through every past choice. The spline is the gravity that pulls the future toward the past.</p>
+    <p>The 1974 captain's 6-71N Detroit (now the "old but stable horse") is a point on the spline. The current captain's perception of "step forward" passes through that point. The next boat Casey sees as a step forward is constrained to be near the spline.</p>
+  </div>
+
+  <div class="plot">
+    <svg id="spline-plot" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
+      <!-- The plot will be drawn by JS -->
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background: #ff6b6b;"></div>
+      <span>Past choice (point on spline)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #64ffda;"></div>
+      <span>The spline (smooth curve)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: rgba(100,255,218,0.3);"></div>
+      <span>Step-forward zone (where the captain sees step-forward boats)</span>
+    </div>
+  </div>
+
+  <div class="info">
+    <h2>Reading the spline</h2>
+    <p>Each red point is a past choice. The cyan curve is the spline — the smooth trajectory through those choices. The cyan band is the step-forward zone — the area where Casey sees a "step forward" boat.</p>
+    <p>The spline is shaped by every past choice. The captain cannot see a step forward that is far from the spline. The spline is the gravity that pulls the future toward the past.</p>
+  </div>
+</div>
+
+<script>
+const points = [
+  { year: 2000, name: "boat 1 (Casey's 1st)", quality: 0.3, cost: 1, era: "the starter" },
+  { year: 2010, name: "boat 2 (Casey's 2nd)", quality: 0.5, cost: 3, era: "the upgrade" },
+  { year: 2015, name: "boat 3 (Casey's 3rd)", quality: 0.6, cost: 5, era: "modern at the time" },
+  { year: 2020, name: "Eileen (Casey's 4th)", quality: 0.55, cost: 7, era: "the old but stable horse" },
+];
+
+// Note: the 1974 captain's 6-71N is also a point on the spline
+// (it's the engine of the 3rd captain's rebuild)
+const old_horse = { year: 1974, name: "6-71N Detroit (1974)", quality: 0.5, cost: 4, era: "modern at the time" };
+
+const all_points = [old_horse, ...points];
+
+// Plot dimensions
+const W = 1000, H = 500;
+const padding = { top: 40, right: 40, bottom: 60, left: 60 };
+const plotW = W - padding.left - padding.right;
+const plotH = H - padding.top - padding.bottom;
+
+// X axis: year (1974 to 2025+)
+const xMin = 1970, xMax = 2027;
+const xScale = (year) => padding.left + ((year - xMin) / (xMax - xMin)) * plotW;
+
+// Y axis: quality (0 to 1)
+const yMin = 0, yMax = 1;
+const yScale = (q) => padding.top + (1 - (q - yMin) / (yMax - yMin)) * plotH;
+
+const svg = document.getElementById('spline-plot');
+
+// Draw axes
+const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+xAxis.setAttribute('x1', padding.left);
+xAxis.setAttribute('y1', H - padding.bottom);
+xAxis.setAttribute('x2', W - padding.right);
+xAxis.setAttribute('y2', H - padding.bottom);
+xAxis.setAttribute('class', 'axis-line');
+svg.appendChild(xAxis);
+
+const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+yAxis.setAttribute('x1', padding.left);
+yAxis.setAttribute('y1', padding.top);
+yAxis.setAttribute('x2', padding.left);
+yAxis.setAttribute('y2', H - padding.bottom);
+yAxis.setAttribute('class', 'axis-line');
+svg.appendChild(yAxis);
+
+// X axis labels (years)
+[1975, 1985, 1995, 2005, 2015, 2025].forEach(year => {
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', xScale(year));
+  label.setAttribute('y', H - padding.bottom + 20);
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('class', 'axis-label');
+  label.textContent = year;
+  svg.appendChild(label);
+});
+
+// Y axis labels (quality)
+[0, 0.25, 0.5, 0.75, 1.0].forEach(q => {
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', padding.left - 10);
+  label.setAttribute('y', yScale(q) + 4);
+  label.setAttribute('text-anchor', 'end');
+  label.setAttribute('class', 'axis-label');
+  label.textContent = q.toFixed(2);
+  svg.appendChild(label);
+});
+
+// Y axis title
+const yTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+yTitle.setAttribute('x', 15);
+yTitle.setAttribute('y', H / 2);
+yTitle.setAttribute('text-anchor', 'middle');
+yTitle.setAttribute('class', 'axis-label');
+yTitle.setAttribute('transform', `rotate(-90, 15, ${H / 2})`);
+yTitle.textContent = 'Quality (0 to 1)';
+svg.appendChild(yTitle);
+
+// X axis title
+const xTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+xTitle.setAttribute('x', W / 2);
+xTitle.setAttribute('y', H - 10);
+xTitle.setAttribute('text-anchor', 'middle');
+xTitle.setAttribute('class', 'axis-label');
+xTitle.textContent = 'Year';
+svg.appendChild(xTitle);
+
+// Draw the step-forward zone (a band around the spline)
+const band = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+// Compute the spline path (linear interpolation between points)
+let pathD = `M ${xScale(all_points[0].year)} ${yScale(all_points[0].quality + 0.2)} `;
+for (let i = 1; i < all_points.length; i++) {
+  pathD += `L ${xScale(all_points[i].year)} ${yScale(all_points[i].quality + 0.2)} `;
+}
+for (let i = all_points.length - 1; i >= 0; i--) {
+  pathD += `L ${xScale(all_points[i].year)} ${yScale(all_points[i].quality - 0.2)} `;
+}
+pathD += 'Z';
+band.setAttribute('d', pathD);
+band.setAttribute('class', 'step-zone');
+svg.appendChild(band);
+
+// Draw the spline (smooth curve through all points)
+const spline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+let splineD = `M ${xScale(all_points[0].year)} ${yScale(all_points[0].quality)} `;
+for (let i = 1; i < all_points.length; i++) {
+  // Catmull-Rom-ish curve using cubic bezier
+  const p0 = all_points[i - 1];
+  const p1 = all_points[i];
+  const cpx = (xScale(p0.year) + xScale(p1.year)) / 2;
+  splineD += `C ${cpx} ${yScale(p0.quality)}, ${cpx} ${yScale(p1.quality)}, ${xScale(p1.year)} ${yScale(p1.quality)} `;
+}
+spline.setAttribute('d', splineD);
+spline.setAttribute('class', 'spline-line');
+svg.appendChild(spline);
+
+// Draw the data points
+all_points.forEach(p => {
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', xScale(p.year));
+  circle.setAttribute('cy', yScale(p.quality));
+  circle.setAttribute('r', 8);
+  circle.setAttribute('class', 'data-point');
+  const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+  title.textContent = `${p.name}\nyear ${p.year}\nquality ${p.quality}\n${p.era}`;
+  circle.appendChild(title);
+  svg.appendChild(circle);
+
+  // Label
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', xScale(p.year) + 12);
+  label.setAttribute('y', yScale(p.quality) - 8);
+  label.setAttribute('class', 'data-label');
+  label.textContent = `${p.year}: ${p.name}`;
+  svg.appendChild(label);
+});
+</script>
+</body>
+</html>
