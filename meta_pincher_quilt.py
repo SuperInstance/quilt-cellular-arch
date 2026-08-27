@@ -46,7 +46,7 @@ VOICES = {
 }
 
 
-def _cf_request(path, body=None, method="GET", timeout=90, retries=2):
+def _cf_request(path, body=None, method="POST", timeout=90, retries=2):
     """Make a request to Cloudflare API. With retry on 400/503/timeout.
 
     Note: 400s can be transient (model loading, quota) so we retry once.

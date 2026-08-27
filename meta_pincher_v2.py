@@ -56,11 +56,15 @@ LLM_MODELS = {
 
 
 # ─── API SCOUT ───
-def _cf_request(path, body=None, method="GET", timeout=30, retries=1):
+def _cf_request(path, body=None, method="POST", timeout=30, retries=2):
     """A single CF API call. No fallbacks; this is the raw pipe.
 
     Fail-fast: if no CLOUDFLARE_TOKEN is set, raise immediately (don't
     waste the timeout window on every call).
+
+    Retry policy: 400s (bad request) are retried 2x because CF sometimes
+    returns 400 transiently (queue timing on small probes). 401/403 are
+    NOT retried (they're auth issues; won't fix).
     """
     if not CF_TOKEN:
         raise Exception("CLOUDFLARE_TOKEN not set")
@@ -69,10 +73,13 @@ def _cf_request(path, body=None, method="GET", timeout=30, retries=1):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     last_err = None
-    for _ in range(retries):
+    for attempt in range(retries):
         try:
             return urllib.request.urlopen(req, timeout=timeout)
         except urllib.error.HTTPError as e:
+            # Don't retry 401/403
+            if e.code in (401, 403):
+                raise Exception(f"CF {e.code} (auth): {e.read()[:200].decode(errors='ignore')}")
             last_err = Exception(f"CF {e.code}: {e.read()[:200].decode(errors='ignore')}")
             time.sleep(0.5)
         except Exception as e:
