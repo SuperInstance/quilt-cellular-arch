@@ -13,13 +13,14 @@ Welcome to the Quilt. The Quilt is a cellular-architecture framework where every
 - **[FISHING_GUIDE.md](FISHING_GUIDE.md)** — 9 grounds, 9 species, 9 lures
 - **[VERIFIER_RESPONSE.md](VERIFIER_RESPONSE.md)** — verification of the framework
 
-## The 5 opcodes
+## The 5+1 opcodes
 
 1. **BIND** — bind a cell to a name
 2. **LINK** — link a cell to another cell
 3. **EFFECT** — make a cell produce side-effects
 4. **VIEW** — read a cell's state
 5. **TICK** — advance the clock
+6. **FORGET** — remove a binding, link, effect, or view (the 6th opcode)
 
 ## The 6 tiers
 
@@ -30,7 +31,7 @@ Welcome to the Quilt. The Quilt is a cellular-architecture framework where every
 5. **Synovial** — the LLM call site
 6. **Curator** — the bias rail (the hand)
 
-## The 5+1 laws
+## The 5+1+1 laws
 
 1. **BIND_idempotence** — binding twice = binding once
 2. **LINK_transitivity** — link a→b, b→c implies a→c
@@ -38,6 +39,7 @@ Welcome to the Quilt. The Quilt is a cellular-architecture framework where every
 4. **VIEW_purity** — view is read-only
 5. **TICK_monotonicity** — clock only advances
 6. **Super-relevance** — a cell that satisfies multiple hands is more fit
+7. **FORGET_completeness** — FORGET(x) removes all traces of x within the laws
 
 ## The 14 levels of the operation
 
