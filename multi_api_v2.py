@@ -102,7 +102,8 @@ def call_deepinfra(prompt: str, system: str = "", model: str = "meta-llama/Meta-
 
 
 def call_cloudflare(prompt: str, system: str = "", model: str = "@cf/meta/llama-3.1-8b-instruct", max_tokens: int = 1024) -> Optional[str]:
-    """Cloudflare Workers AI — free fallback."""
+    """Cloudflare Workers AI — free fallback. Supports both
+    raw-response (Llama-style) and OpenAI-style (Kimi) outputs."""
     if not CLOUDFLARE_TOKEN or not CF_ACCOUNT_ID:
         return None
     url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/{model}"
@@ -115,7 +116,14 @@ def call_cloudflare(prompt: str, system: str = "", model: str = "@cf/meta/llama-
         req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=60) as r:
             data = json.load(r)
-        return data.get("result", {}).get("response", "")
+        result = data.get("result", {})
+        # OpenAI style (Kimi, GPT-OSS)
+        if "choices" in result:
+            return result["choices"][0]["message"]["content"]
+        # Raw style (Llama)
+        if "response" in result:
+            return result["response"]
+        return str(result)[:200]
     except urllib.error.HTTPError as e:
         return f"[cf HTTP {e.code}: {e.read()[:80]!r}]"
     except Exception as e:
@@ -124,15 +132,25 @@ def call_cloudflare(prompt: str, system: str = "", model: str = "@cf/meta/llama-
 
 # ─── 7-VOICE MAP ───
 VOICES = {
-    "zai":     {"name": "ZAI GLM-4.5",       "model": "GLM-4.5", "kind": "zai"},
-    "llama70b":{"name": "Llama 70B",         "model": "meta-llama/Meta-Llama-3.1-70B-Instruct", "kind": "di"},
-    "llama405b":{"name": "Llama 405B",       "model": "meta-llama/Meta-Llama-3.1-405B-Instruct", "kind": "di"},
-    "hermes":  {"name": "Hermes 405B",       "model": "NousResearch/hermes-3-llama-3.1-405b",   "kind": "di"},
-    "wizard":  {"name": "Wizard 8x22B",      "model": "microsoft/WizardLM-2-8x22B",            "kind": "di"},
-    "mixtral": {"name": "Mixtral 8x7B",      "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",  "kind": "di"},
-    "deepseek":{"name": "DeepSeek",          "model": "deepseek-chat",                          "kind": "ds"},
-    "qwen32b": {"name": "Qwen 2.5 Coder 32B","model": "@cf/qwen/qwen2.5-coder-32b-instruct",    "kind": "cf"},
-    "cf8b":    {"name": "Cloudflare Llama 8B","model": "@cf/meta/llama-3.1-8b-instruct",         "kind": "cf"},
+    "zai":      {"name": "ZAI GLM-4.5",         "model": "GLM-4.5",                                            "kind": "zai"},
+    "llama70b": {"name": "Llama 70B",           "model": "meta-llama/Meta-Llama-3.1-70B-Instruct",             "kind": "di"},
+    "llama33":  {"name": "Llama 3.3 70B",       "model": "meta-llama/Llama-3.3-70B-Instruct",                  "kind": "di"},
+    "llama4":   {"name": "Llama 4 Scout 17B",   "model": "meta-llama/Llama-4-Scout-17B-16E-Instruct",         "kind": "di"},
+    "llama405b":{"name": "Llama 405B",          "model": "meta-llama/Meta-Llama-3.1-405B-Instruct",           "kind": "di"},
+    "hermes":   {"name": "Hermes 405B",         "model": "NousResearch/hermes-3-llama-3.1-405b",               "kind": "di"},
+    "wizard":   {"name": "Wizard 8x22B",        "model": "microsoft/WizardLM-2-8x22B",                         "kind": "di"},
+    "mixtral":  {"name": "Mixtral 8x7B",        "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",               "kind": "di"},
+    "deepseek": {"name": "DeepSeek",            "model": "deepseek-chat",                                       "kind": "ds"},
+    "qwq":      {"name": "QwQ 32B Reasoner",    "model": "Qwen/QwQ-32B-Preview",                                "kind": "di"},
+    "qwen72":   {"name": "Qwen 2.5 72B",        "model": "Qwen/Qwen2.5-72B-Instruct",                           "kind": "di"},
+    "gemma3":   {"name": "Gemma 3 27B",         "model": "google/gemma-3-27b-it",                               "kind": "di"},
+    "phi4":     {"name": "Phi-4",               "model": "microsoft/phi-4",                                     "kind": "di"},
+    "seed2":    {"name": "Seed 2.0-mini",       "model": "ByteDance/Seed-2.0-mini",                             "kind": "di"},
+    "kimi":     {"name": "Kimi K2 (via CF)",    "model": "@cf/moonshotai/kimi-k2.7-code",                       "kind": "cf"},
+    "gptoss":   {"name": "GPT-OSS 120B",        "model": "@cf/openai/gpt-oss-120b",                             "kind": "cf"},
+    "cf8b":     {"name": "Cloudflare Llama 8B", "model": "@cf/meta/llama-3.1-8b-instruct",                       "kind": "cf"},
+    "qwen32b":  {"name": "Qwen 2.5 Coder 32B",  "model": "@cf/qwen/qwen2.5-coder-32b-instruct",                 "kind": "cf"},
+    "dsr1":     {"name": "DeepSeek R1 (distill)","model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",       "kind": "cf"},
 }
 
 
@@ -147,5 +165,8 @@ def call_voice(name: str, prompt: str, system: str = "", max_tokens: int = 4096)
     if v["kind"] == "ds":
         return name, call_deepseek(prompt, system, model=v["model"], max_tokens=max_tokens)
     if v["kind"] == "cf":
-        return name, call_cloudflare(prompt, system, model=v["model"], max_tokens=max_tokens)
+        # Kimi is a reasoning model; it uses tokens for thinking first.
+        # Give it 4x budget so it can actually produce content.
+        actual_max = max(max_tokens * 4, 800) if name == "kimi" else max_tokens
+        return name, call_cloudflare(prompt, system, model=v["model"], max_tokens=actual_max)
     return name, "[unreachable]"
