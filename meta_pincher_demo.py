@@ -153,6 +153,11 @@ KEYWORD_DOCS = {
                                     "title": "F3: The Monotone Crystal",
                                     "preview": "A finished thought, irreversible, monotone only. Lynch 1927 via Kleitman. The fleet needs many loaves the way a boat needs many joints."}},
     ],
+    "grown crystal": [
+        {"score": 0.9, "metadata": {"path": "grown_crystal.py",
+                                    "title": "The Grown Crystal — Phoenix of Hardware",
+                                    "preview": "The Phoenix of hardware. 4 stages: Seed/Proto Crystal, Incubator/Brood-Forge, Grown Crystal/Pressured Bloom, Hive/Living Quilt. The Grown Crystal dies, the Hive replenishes."}},
+    ],
     "chlorophyll quilt": [
         {"score": 0.9, "metadata": {"path": "00-future/04-chlorophyll-quilt.md",
                                     "title": "F5: The Chlorophyll Quilt",
@@ -187,16 +192,23 @@ KEYWORD_DOCS = {
 
 
 def keyword_retrieve(query, top_k=3):
-    """Keyword-based fallback when Vectorize retrieval fails."""
-    q_lower = query.lower()
+    """Keyword-based fallback when Vectorize retrieval fails.
+
+    Strips apostrophes and trailing 's' so 'Grown Crystal's' matches
+    'grown crystal' (the apostrophe was breaking substring matches in v1).
+    """
+    import re
+    # Normalize: lowercase, strip possessives ('s), strip apostrophes
+    q_norm = re.sub(r"[''`]s?\b", "", query.lower()).strip()
     matches = []
     for key, docs in KEYWORD_DOCS.items():
-        if key in q_lower:
+        if key in q_norm:
             matches.extend(docs)
     # Also try word-level matching
     if not matches:
         for key, docs in KEYWORD_DOCS.items():
-            for word in q_lower.split():
+            for word in q_norm.split():
+                word = re.sub(r"[''`]", "", word)
                 if len(word) > 4 and word in key:
                     matches.extend(docs)
                     break

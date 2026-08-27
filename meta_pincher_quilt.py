@@ -183,40 +183,75 @@ def ask(query, top_k=5, model="llama8b", index="ai-writings", verbose=True):
     }
 
 
-# ─── DEMO ───
+# ─── DEMO + CLI ───
 if __name__ == "__main__":
-    print("=" * 70)
-    print("THE META-PINCHER-QUILT — a vectorized stateless agent")
-    print("=" * 70)
-    print()
-    print("The cowboy asked: 'could this be vectorized on cloudflare to")
-    print("make superintelligent-for-the-concepts-processed stateless")
-    print("cloudflare agents - almost like a meta-pincher-quilt?'")
-    print()
-    print("Architecture:")
-    print("  Query -> Embed (bge-m3, 1024d, truncated to 768)")
-    print("       -> Retrieve (Vectorize: ai-writings, top-K)")
-    print("       -> Synthesize (Workers AI, canon-grounded)")
-    print()
-    print("Try some canon-grounded questions:")
-    print()
+    import argparse
 
-    questions = [
-        "What is the Splined Lantern?",
-        "What is the Hearth Loop?",
-        "What is the Grown Crystal's 4 stages?",
-        "What's the relationship between the cowboy and the AI?",
-        "What are the 5+1+1 laws?",
-    ]
+    parser = argparse.ArgumentParser(
+        description="The Meta-Pincher-Quilt: vectorized, stateless, CF-native.",
+        epilog="Without --query, runs the 5-question demo. With --query, runs that one question.",
+    )
+    parser.add_argument("--query", "-q", type=str, default=None,
+                        help="Single query to ask (overrides the 5-question demo).")
+    parser.add_argument("--top-k", type=int, default=3,
+                        help="Number of passages to retrieve (default: 3).")
+    parser.add_argument("--model", type=str, default="llama8b",
+                        choices=list(VOICES.keys()),
+                        help="Which CF Workers AI model to synthesize with (default: llama8b).")
+    parser.add_argument("--no-sleep", action="store_true",
+                        help="Skip the rate-limit sleep between questions (demo only).")
+    args = parser.parse_args()
 
-    for q in questions:
-        print(f"Q: {q}")
-        try:
-            r = ask(q, top_k=3, model="llama8b")
-            print(f"A: {r['response'][:400]}")
-            print(f"   (total: {r['timing']['total']:.2f}s, "
-                  f"top match: {r['matches'][0]['metadata'].get('path', '?') if r['matches'] else 'none'})")
-        except Exception as e:
-            print(f"A: [error: {e}]")
+    if args.query is not None:
+        # Single-query mode
+        r = ask(args.query, top_k=args.top_k, model=args.model, verbose=True)
+        print(json.dumps({
+            "query": r["query"],
+            "response": r["response"][:1000],
+            "top_match": r["matches"][0]["metadata"].get("path") if r["matches"] else None,
+            "n_matches": len(r["matches"]),
+            "timing_ms": round(r["timing"]["total"] * 1000, 1),
+        }, indent=2))
+    else:
+        # Default 5-question demo
+        print("=" * 70)
+        print("THE META-PINCHER-QUILT — a vectorized stateless agent")
+        print("=" * 70)
         print()
-        time.sleep(5)  # be nice to the rate limiter
+        print("The cowboy asked: 'could this be vectorized on cloudflare to")
+        print("make superintelligent-for-the-concepts-processed stateless")
+        print("cloudflare agents - almost like a meta-pincher-quilt?'")
+        print()
+        print("Architecture:")
+        print("  Query -> Embed (bge-m3, 1024d, truncated to 768)")
+        print("       -> Retrieve (Vectorize: ai-writings, top-K)")
+        print("       -> Synthesize (Workers AI, canon-grounded)")
+        print()
+        print("Try some canon-grounded questions:")
+        print()
+
+        questions = [
+            "What is the Splined Lantern?",
+            "What is the Hearth Loop?",
+            "What is the Grown Crystal's 4 stages?",
+            "What's the relationship between the cowboy and the AI?",
+            "What are the 5+1+1 laws?",
+        ]
+
+        n_answered = 0
+        for q in questions:
+            print(f"Q: {q}")
+            try:
+                r = ask(q, top_k=3, model="llama8b")
+                print(f"A: {r['response'][:400]}")
+                print(f"   (total: {r['timing']['total']:.2f}s, "
+                      f"top match: {r['matches'][0]['metadata'].get('path', '?') if r['matches'] else 'none'})")
+                if r['matches'] and r['response']:
+                    n_answered += 1
+            except Exception as e:
+                print(f"A: [error: {e}]")
+            print()
+            if not args.no_sleep:
+                time.sleep(5)  # be nice to the rate limiter
+
+        print(f"  {n_answered}/{len(questions)} questions returned a grounded answer.")

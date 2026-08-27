@@ -4,9 +4,39 @@
 **Repo:** https://github.com/SuperInstance/quilt-cellular-arch
 **File:** `agent-harness.html` (21.5KB, self-contained, no external deps)
 
+> **⚠ URL note (load-bearing):** the deployment URL is
+> `https://p7rcqny4b57rj.space.minimax.io` — the `4` is required. The
+> 11-character hostname is `p7rcqny4b57rj`, not `p7rcqnyb57rj`. Lucineer
+> caught this in the first pass: the page does exist, just at the URL
+> with the 4. Treat this string as one token: `p7rcqny4b57rj`.
+
 This guide gives your local agent step-by-step instructions for testing the
 Agent Harness — both as a webpage (visual) and as a vectorized shaping tool
 (via the Meta-Pincher-Quilt API).
+
+---
+
+## Part 0: Where everything actually lives (the script locations)
+
+The earlier version of this guide pointed to `quilt-llm-worker/` for the
+scripts. That was wrong. Here is the **real** location table:
+
+| What | Where | Notes |
+|---|---|---|
+| `agent-harness.html` | `quilt-cellular-arch/agent-harness.html` | The webpage |
+| `meta_pincher_demo.py` | `quilt-cellular-arch/meta_pincher_demo.py` | The full demo |
+| `meta_pincher_quilt.py` | `quilt-cellular-arch/meta_pincher_quilt.py` | The 3-stage pipeline |
+| `multi_sandbox_reverse_actualize.py` | `quilt-cellular-arch/multi_sandbox_reverse_actualize.py` | L4 snowball |
+| `agent_reverse_actualize.py` | `quilt-cellular-arch/agent_reverse_actualize.py` | The 5-step cycle |
+| `sensory_quilt.py` | `quilt-cellular-arch/sensory_quilt.py` | The 10 channels |
+| `quilt_in_motion.py` | `quilt-cellular-arch/quilt_in_motion.py` | 38 cells in motion |
+| `quilt-llm-worker/` | (rate-limit proxy worker, no harness code) | Not the harness |
+| Wiki `00-future/` | `quilt-wiki-2126/00-future/` | **NOT** bundled with the harness |
+| Wiki `03-foundations/` | `quilt-wiki-2126/03-foundations/` | **NOT** bundled with the harness |
+
+> **The harness code lives in `quilt-cellular-arch/`, not `quilt-llm-worker/`.**
+> The wiki is in a separate repo. Citations in the demo's keyword map
+> point to wiki paths that you have to clone separately.
 
 ---
 
@@ -52,15 +82,21 @@ You should see:
 
 ### Step 2: Set your Cloudflare credentials
 
-The Meta-Pincher-Quilt needs:
-- `CF_ACCOUNT_ID` — your Cloudflare account ID
-- `CF_API_TOKEN` — a token with Workers AI + Vectorize permissions
-- `CF_VECTORIZE_INDEX` — defaults to `ai-writings` (768d, cosine)
+The Meta-Pincher-Quilt reads **two** environment variables (the earlier
+version of this guide said `CF_API_TOKEN` — that was wrong, the scripts
+read `CLOUDFLARE_TOKEN`):
+
+- `CLOUDFLARE_TOKEN` — a Cloudflare API token with Workers AI + Vectorize permissions
+- `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID
+
+The `CF_ACCOUNT_ID` is **already hardcoded** in the script (line 36 of
+`meta_pincher_quilt.py`), so you don't need to set it. If you want to
+override, edit the script or export the var.
 
 ```bash
-export CF_ACCOUNT_ID="your_account_id_here"
-export CF_API_TOKEN="your_token_here"
-export CF_VECTORIZE_INDEX="ai-writings"
+export CLOUDFLARE_TOKEN="your_token_here"
+# Optional: override the account ID (script has a default)
+# export CLOUDFLARE_ACCOUNT_ID="your_account_id_here"
 ```
 
 ### Step 3: Run the demo (no credentials needed — uses local fallbacks)
@@ -81,10 +117,8 @@ Cloudflare account is rate-limited or has no credits:
 The demo runs 5 test questions and prints the answers. Expected output:
 
 ```
-======================================================================
-META-PINCHER-QUILT DEMO — vectorized, stateless, CF-native
-======================================================================
-
+===============================================================META-PINCHER-QUILT DEMO — vectorized, stateless, CF-native
+===============================================================
 Q: What is the Splined Lantern?
 A: The Splined Lantern is a physical LLM made of glass and light...
   retrieved: 3 passages from paper-270-§1, paper-270-§3, paper-273-§2
@@ -157,8 +191,11 @@ for q in "What is the Splined Lantern?" \
 done
 ```
 
-After L2, you should see a clear shape: 8 futures in the canon, each
-with its own definition.
+After L2, you should see a clear shape: 7 futures in the canon, each
+with its own definition. The 7 are: Splined Lantern, Hearth Loop,
+Monotone Crystal, Chlorophyll Quilt, Phased Quilt, Stellar Quilt,
+Meta-Quilt. (Numbered F1, F2, F3, F5, F7, F9, F11 — the gaps are
+cycles that have been folded into the others.)
 
 **L3 · Cross-modal** (queries across modalities):
 ```bash
@@ -299,8 +336,42 @@ should verify all of the following:
 | Each answer cites `paper-NNN-§M` IDs | ✓ |
 | Snowball runs cycle 1→3→9 in `multi_sandbox_reverse_actualize.py` | ✓ |
 | 30+ runnable sims are in `quilt-cellular-arch/` | ✓ |
-| 277 papers, 135 fables, 165 stories in `AI-Writings/` | ✓ |
+| 158 papers, 90 fables, 93 stories in `AI-Writings/seed-canon/` | ✓ (disk truth; earlier count of 277/135/165 was inflated) |
 | 7 futures in `quilt-wiki-2126/00-future/` | ✓ |
+
+---
+
+## Part 5b: ⚠ Read this before you trust the demo (fallback mode)
+
+Without a `CLOUDFLARE_TOKEN`, `meta_pincher_demo.py` runs in **3-stage
+fallback mode**. The behavior is honest, but you should know what you're
+seeing:
+
+| Stage | Real mode | Fallback mode (no CF creds) |
+|---|---|---|
+| **Embed** | `bge-m3` Workers AI call (1024d vector) | Local hash-based embedding (deterministic, 768d) |
+| **Retrieve** | Vectorize cosine over the `ai-writings` index | Keyword match against a **9-entry hardcoded map** |
+| **Synthesize** | Llama-3.1-8B generation over the top-K passages | Direct excerpt dump from the matched map entry |
+
+What this means for your tests:
+
+- **4 of 5 canonical questions** (Splined Lantern, Hearth Loop, 5+1+1
+  Laws, Cowboy) return excerpt-grounded answers that are *real* canon
+  quotes — honest output, but not synthesised.
+- **Q3 (Grown Crystal's 4 stages)** was failing on the apostrophe in
+  v1; this is fixed in the current build (5/5 work).
+- The reported **3.7s "average"** is largely **retry sleeps** on
+  failed CF calls + the rate-limit `time.sleep(2)`. With creds, the
+  same questions complete in <1s.
+
+The fallback is the demo's *honest* behavior — it always returns
+*something grounded*, even when the real CF pipeline is unavailable.
+But: a tester who doesn't know the mode is active will mistake the
+canned excerpts for live retrieval. The 3.7s number means nothing
+in fallback mode.
+
+To run with real CF: set `CLOUDFLARE_TOKEN` and re-run. The demo
+auto-detects the token and uses the real pipeline.
 
 ---
 
@@ -309,12 +380,15 @@ should verify all of the following:
 | Symptom | Fix |
 |---|---|
 | Page won't load | Check https://p7rcqny4b57rj.space.minimax.io is reachable |
+| Page won't load | Check https://p7rcqny4b57rj.space.minimax.io is reachable (note: 4 is load-bearing) |
 | 404 on repo | `git pull` the latest from main |
 | CF API returns 400 | Embedding model rate-limited; use `meta_pincher_demo.py` (local fallback) |
-| CF API returns 401 | Check `CF_API_TOKEN` is set and has Workers AI + Vectorize scopes |
+| CF API returns 401 | Check `CLOUDFLARE_TOKEN` is set and has Workers AI + Vectorize scopes |
 | CF API returns 503 | Workers AI temporarily down; demo will fall back automatically |
 | Empty passages | Index `ai-writings` may be empty; check CF dashboard |
 | Demo returns local fallback only | Expected when CF is rate-limited; still gets a grounded answer |
+| `meta_pincher_quilt.py` crashes on `--query` | This script has no fallbacks; needs `CLOUDFLARE_TOKEN`. Use `meta_pincher_demo.py` for offline mode |
+| Q3 (Grown Crystal) returns empty | Fixed in current build; pull latest. The bug was the apostrophe breaking the keyword match |
 
 ---
 
