@@ -147,10 +147,20 @@ VOICES = {
     "phi4":     {"name": "Phi-4",               "model": "microsoft/phi-4",                                     "kind": "di"},
     "seed2":    {"name": "Seed 2.0-mini",       "model": "ByteDance/Seed-2.0-mini",                             "kind": "di"},
     "kimi":     {"name": "Kimi K2 (via CF)",    "model": "@cf/moonshotai/kimi-k2.7-code",                       "kind": "cf"},
+    "kimi26":   {"name": "Kimi K2.6 (via CF)",  "model": "@cf/moonshotai/kimi-k2.6",                            "kind": "cf"},
     "gptoss":   {"name": "GPT-OSS 120B",        "model": "@cf/openai/gpt-oss-120b",                             "kind": "cf"},
     "cf8b":     {"name": "Cloudflare Llama 8B", "model": "@cf/meta/llama-3.1-8b-instruct",                       "kind": "cf"},
     "qwen32b":  {"name": "Qwen 2.5 Coder 32B",  "model": "@cf/qwen/qwen2.5-coder-32b-instruct",                 "kind": "cf"},
+    "qwen38":   {"name": "Qwen 3.8 27B",        "model": "@cf/qwen/qwen3.8-27b",                                "kind": "cf"},
+    "qwen3":    {"name": "Qwen 3 30B",          "model": "@cf/qwen/qwen3-30b-a3b-fp8",                          "kind": "cf"},
     "dsr1":     {"name": "DeepSeek R1 (distill)","model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",       "kind": "cf"},
+    "dsv4p":    {"name": "DeepSeek V4 Pro",     "model": "@cf/deepseek-ai/deepseek-v4-pro-0813",                "kind": "cf"},
+    "dsv4f":    {"name": "DeepSeek V4 Flash",   "model": "@cf/deepseek-ai/deepseek-v4-flash-0731",              "kind": "cf"},
+    "glm53f":   {"name": "GLM 5.3-flash",       "model": "@cf/zai-org/glm-5.3-flash",                           "kind": "cf"},
+    "glm52":    {"name": "GLM 5.2",             "model": "@cf/zai-org/glm-5.2",                                 "kind": "cf"},
+    "glm47f":   {"name": "GLM 4.7-flash",       "model": "@cf/zai-org/glm-4.7-flash",                           "kind": "cf"},
+    "gemma4":   {"name": "Gemma 4 26B",         "model": "@cf/google/gemma-4-26b-a4b-it",                       "kind": "cf"},
+    "mistral31":{"name": "Mistral Small 3.1",   "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",        "kind": "cf"},
 }
 
 
@@ -165,8 +175,10 @@ def call_voice(name: str, prompt: str, system: str = "", max_tokens: int = 4096)
     if v["kind"] == "ds":
         return name, call_deepseek(prompt, system, model=v["model"], max_tokens=max_tokens)
     if v["kind"] == "cf":
-        # Kimi is a reasoning model; it uses tokens for thinking first.
-        # Give it 4x budget so it can actually produce content.
-        actual_max = max(max_tokens * 4, 800) if name == "kimi" else max_tokens
+        # Reasoning models (Kimi, GLM 5.x, DeepSeek V4, Qwen 3.8) need 8x
+        # tokens for thinking. Non-reasoning need 1x.
+        reasoning = name in ("kimi", "kimi26", "glm53f", "glm52", "glm47f",
+                             "dsv4p", "dsv4f", "qwen38")
+        actual_max = max_tokens * 8 if reasoning else max_tokens
         return name, call_cloudflare(prompt, system, model=v["model"], max_tokens=actual_max)
     return name, "[unreachable]"
