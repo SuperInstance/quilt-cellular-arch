@@ -296,11 +296,13 @@ def retrieve_with_fallbacks(query, vector, index=DEFAULT_INDEX, top_k=3):
                 # mentions 'paper-' / '00-future' / 'fable-', accept
                 path0 = matches[0].get("metadata", {}).get("path", "?")
                 if any(marker in path0 for marker in ["paper-", "00-future", "03-foundations",
-                                                      "fable-", "story-", "splined-lantern",
-                                                      "hearth-loop", "monotone-crystal",
-                                                      "chlorophyll-quilt", "phased-quilt",
-                                                      "stellar-quilt", "meta-quilt", "5-laws",
-                                                      "grown_crystal.py"]):
+                                                      "01-calculations", "fable-", "story-",
+                                                      "splined-lantern", "hearth-loop",
+                                                      "monotone-crystal", "chlorophyll-quilt",
+                                                      "phased-quilt", "stellar-quilt",
+                                                      "meta-quilt", "5-laws", "loam-equation",
+                                                      "substrate-as-a-tier", "grown_crystal.py",
+                                                      "tessellation-quilt"]):
                     return matches, "L1:vectorize:clean", "vectorize"
                 # Else: index is polluted; fall through to keyword
         except Exception:
