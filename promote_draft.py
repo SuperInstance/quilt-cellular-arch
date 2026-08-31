@@ -88,6 +88,11 @@ def main():
         f.write(text)
     print(f"WROTE {paper_path}")
 
+    # Release the lock file (if any) that the daemon reserved
+    lock = os.path.join(CANON_DIR, f"paper-{paper_num}.md.lock")
+    if os.path.exists(lock):
+        os.remove(lock)
+
     # Derive a wiki path. If fid is L<N>, write to <N>.md.
     wiki_path = None
     m = re.match(r"^L(\d+)$", fid)

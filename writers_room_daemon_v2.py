@@ -96,15 +96,46 @@ def parse_json_safe(text):
 
 
 def next_paper_number():
-    """Scan the canon dir for the highest paper-NNN.md number, return +1."""
-    max_n = 0
+    """Allocate the next free paper number atomically.
+
+    Scans the canon dir for the highest paper-NNN.md number, then
+    writes a reservation stub (a 1-byte file) at paper-(N+1).md
+    so any other process sees the reservation and skips to N+2.
+    Returns the allocated number.
+
+    If a stub already exists, treat it as reserved and try N+1,
+    N+2, ... until we find a free number.
+    """
+    # Collect all reserved numbers
+    reserved = set()
     for fname in os.listdir(CANON_DIR):
-        m = re.match(r"^paper-(\d+)\.md$", fname)
+        m = re.match(r"^paper-(\d+)\.md(\.lock)?$", fname)
         if m:
-            n = int(m.group(1))
-            if n > max_n:
-                max_n = n
-    return max_n + 1
+            reserved.add(int(m.group(1)))
+    n = max(reserved) + 1 if reserved else 1
+    # Try to reserve
+    while True:
+        stub = os.path.join(CANON_DIR, f"paper-{n}.md.lock")
+        real = os.path.join(CANON_DIR, f"paper-{n}.md")
+        if os.path.exists(stub) or os.path.exists(real):
+            n += 1
+            continue
+        # Reserve by creating a lock file
+        try:
+            with open(stub, "x") as f:
+                f.write("reserved")
+            return n
+        except FileExistsError:
+            n += 1
+            continue
+
+
+def release_paper_number(n):
+    """Release a reserved paper number (called after writing the
+    actual paper or on failure)."""
+    stub = os.path.join(CANON_DIR, f"paper-{n}.md.lock")
+    if os.path.exists(stub):
+        os.remove(stub)
 
 
 def wiki_path_for(frontier_id, title_hint):
@@ -239,6 +270,7 @@ def process_frontier(frontier):
     paper_num = next_paper_number()
     paper = paper_path_for(paper_num)
     if os.path.exists(wiki) or os.path.exists(paper):
+        release_paper_number(paper_num)
         print(f"  SKIP {fid}: wiki or paper already exists")
         return "SKIPPED_CANON_EXISTS"
 
@@ -267,6 +299,7 @@ def process_frontier(frontier):
             raw = os.path.join(DRAFTS_DIR, f"raw-{fid}-{v}.txt")
             with open(raw, "w") as f:
                 f.write(d["response"])
+        release_paper_number(paper_num)
         return "FAILED_NO_JSON"
 
     # Write DRAFT (staging), never directly to canon
