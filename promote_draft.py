@@ -53,6 +53,12 @@ def main():
         src = hand_synth
         source_kind = "HAND_SYNTH"
         print(f"Using hand-synth: {hand_synth}")
+        # CRITICAL: if a hand-synth exists, the LLM draft must be
+        # discarded so a re-run can't pick it up. The hand-synth
+        # is the cowboy's intentional choice.
+        if os.path.exists(draft):
+            os.remove(draft)
+            print(f"  Discarded LLM draft: {draft}")
     elif os.path.exists(draft):
         src = draft
         source_kind = "DRAFT"
