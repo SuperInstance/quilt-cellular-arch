@@ -1,69 +1,90 @@
-# API Inventory — 19 Voices, 16 Working (2026-08-27)
+# API Inventory — 13 Voices, 13 Working (2026-08-31)
 
-*Last pulse: 2026-08-27 18:43 PT. Re-run anytime with `python3 api_pulse.py`.*
+*Last pulse: 2026-08-31 18:43 PT. Re-run anytime with `python3 writers_room_daemon_v3.py --pulse`.*
 
-## The 16 working voices
+## The 13 working voices (Aug 2026 reality)
 
-| Voice | Source | Model | Best for |
+The Aug 2026 quota shift killed all DeepInfra and DeepSeek native voices (insufficient balance).
+The writers' room rebuilt on Cloudflare + Gemini, which are the only free / paid paths still
+alive. The current 13:
+
+### Cloudflare Workers AI (10 voices, all working)
+
+| Voice name | Model | Role | Typical latency |
 |---|---|---|---|
-| **llama70b** | DeepInfra | `meta-llama/Meta-Llama-3.1-70B-Instruct` | practitioner whiteboard, Tier Bleed |
-| **llama33** | DeepInfra | `meta-llama/Llama-3.3-70B-Instruct` | best for writers' room, gold terms |
-| **llama4** | DeepInfra | `meta-llama/Llama-4-Scout-17B-16E-Instruct` | small/capable |
-| **llama405b** | DeepInfra | `meta-llama/Meta-Llama-3.1-405B-Instruct` | hidden symmetry |
-| **hermes** | DeepInfra | `NousResearch/hermes-3-llama-3.1-405b` | W6 braid, Quantum Scarring |
-| **wizard** | DeepInfra | `microsoft/WizardLM-2-8x22B` | landscape, Loom Drift, Scriptorium |
-| **mixtral** | DeepInfra | `mistralai/Mixtral-8x7B-Instruct-v0.1` | multidisciplinary blender |
-| **deepseek** | native | `deepseek-chat` | code, dense technical |
-| **qwq** | DeepInfra | `Qwen/QwQ-32B-Preview` | reasoning (no direct output) |
-| **qwen72** | DeepInfra | `Qwen/Qwen2.5-72B-Instruct` | emergence observer |
-| **gemma3** | DeepInfra | `google/gemma-3-27b-it` | prompt-friendly |
-| **phi4** | DeepInfra | `microsoft/phi-4` | small/capable |
-| **seed2** | DeepInfra | `ByteDance/Seed-2.0-mini` | fast court of variety |
-| **cf8b** | Cloudflare | `@cf/meta/llama-3.1-8b-instruct` | free fallback |
-| **qwen32b** | Cloudflare | `@cf/qwen/qwen2.5-coder-32b-instruct` | code |
-| **dsr1** | Cloudflare | `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | reasoning (no direct output) |
+| **qwen32b** | `@cf/qwen/qwen2.5-coder-32b-instruct` | code | ~1.1s |
+| **dsr1** | `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | reasoning | ~0.9s |
+| **llama70b** | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | term_gold | ~0.4s |
+| **llama4** | `@cf/meta/llama-4-scout-17b-16e-instruct` | term_gold | ~0.4s |
+| **mistral** | `@cf/mistralai/mistral-small-3.1-24b-instruct` | term_gold | ~2.4s |
+| **qwq** | `@cf/qwen/qwq-32b` | reasoning | ~1.1s |
+| **llama3b** | `@cf/meta/llama-3.2-3b-instruct` | fast | ~0.3s |
+| **llama8b** | `@cf/meta/llama-3.1-8b-instruct-fp8` | fast | ~1.5s |
+| **llama1b** | `@cf/meta/llama-3.2-1b-instruct` | fast | ~0.5s |
+| **gemma2b** | `@cf/google/gemma-2b-it-lora` | fast | ~1.3s |
 
-## The 3 failing voices (currently)
+### Gemini (3 voices, all working)
 
-| Voice | Source | Status | What to do |
+| Voice name | Model | Role | Typical latency |
 |---|---|---|---|
-| **zai** | ZAI | **429 Insufficient balance** | wait; ZAI 5.x exhausted, only GLM-4.5 works (and is now 429) |
-| **kimi** | Cloudflare | **empty / 503 intermittent** | retry; was gold for "cell that weaves light", "biophoton", "spore+light" |
-| **gptoss** | Cloudflare | **empty / 503 intermittent** | retry; was gold for "Lumen Bedrock Era" |
+| **gemini35lite** | `gemini-3.5-flash-lite` | fast (math!) | ~0.5s |
+| **gemini25** | `gemini-2.5-flash` | long_form | ~3.0s |
+| **gemini31** | `gemini-3.1-flash-lite` | long_form | ~2.4s |
 
-## The mode of operation
-
-- **Fire 3-4 in parallel** for writers' room. Smaller prompts (under 200 words) are faster.
-- **Llama 3.3 is the workhorse** — produces the most gold terms across the canon.
-- **Hermes, Wizard, Mixtral** as court of variety.
-- **DeepSeek** for code/dense.
-- **QwQ, DSR1** for reasoning (use them for *math* prompts, not for *term generation*).
-- **Kimi, GPT-OSS** when they work — both produce the most distinctive terms.
+**Total: 13 voices, 13 working.** No 429, no 503, no Insufficient Balance. Cloudflare
+Workers AI has been the workhorse; Gemini is the new gold for math-rich content.
 
 ## The 4 retry rules
 
-1. **503/429 storms** — sleep 30s and retry. The CF and ZAI quotas are real-time.
-2. **Reasoning models** (QwQ, DSR1) — give them 4x max_tokens. Their thinking eats budget.
+1. **503 storms** — sleep 30s and retry. The CF quotas are real-time.
+2. **Reasoning models** (DSR1, QwQ) — give them 4x max_tokens. Their thinking eats budget.
 3. **Empty returns** — most often a token-revoked or 503. Try once more, then move on.
-4. **Switch ground** if persistent — if Kimi 503s twice, fall back to Llama 3.3.
+4. **Switch ground** if persistent — if a voice fails twice, fall back to gemini35lite
+   (the most reliable + math-capable).
 
 ## The voice allocation
 
-- **Code**: DeepSeek > Qwen 32B > DeepSeek R1 (reasoning) > Qwen 72B
-- **Gold terms**: Llama 3.3 > Kimi > Hermes > Wizard > Mixtral > Qwen 72B
-- **Long-form synthesis**: ZAI (when it works) > DeepSeek > Llama 70B
-- **Reasoning**: QwQ > DSR1
-- **Free fallback**: CF 8B > Qwen Coder 32B
+- **Code**: qwen32b > dsr1 > gemini35lite
+- **Gold terms**: llama70b > llama4 > mistral
+- **Long-form synthesis**: gemini25 > mistral > gemini31
+- **Reasoning**: gemini35lite (math!) > dsr1 > qwq
+- **Math-rich papers**: gemini35lite is the new gold (LaTeX-heavy, 12-14K chars per response)
+- **Free fallback**: gemini35lite > llama3b > llama8b
 
-## The voice-pulse script
+## The 4-voice writers' room (default)
+
+```python
+DEFAULT_ROOM = ["qwen32b", "llama70b", "gemini35lite", "gemini25"]
+```
+
+- **qwen32b**: code + dense technical (the spine's bones)
+- **llama70b**: term gold, structure (the spine's body)
+- **gemini35lite**: math + reasoning (the spine's spine)
+- **gemini25**: long-form synthesis (the spine's voice)
+
+The foreman picks the best voice per frontier as the spine. gemini35lite is
+the new gold for math-rich papers (it produces LaTeX-formatted content up
+to 14K chars in 11 seconds).
+
+## The pulse script
 
 ```bash
 cd /workspace/_scouts
-python3 api_pulse.py
+python3 writers_room_daemon_v3.py --list-voices
+python3 writers_room_daemon_v3.py --pulse
 ```
 
-This will test all 19 voices and report which are working, which are failing, and why. Run it before a major writers' room. The output is in `api_pulse.log`.
+This will test all 13 voices and report which are working, which are failing, and why.
+Run it before a major writers' room.
+
+## The migration note
+
+- 2026-08-27: 16/19 working (3 failing: ZAI balance, Kimi 503, GPT-OSS 503)
+- 2026-08-31: 13/13 working (DeepInfra + DeepSeek all died; rebuilt on CF + Gemini)
+
+The old `api_pulse.py` still works but reports most voices as failed. Use
+`writers_room_daemon_v3.py --pulse` for the current state.
 
 ---
 
-*Last pulse: 2026-08-27 18:43 PT. 16/19 working. 3 failing (ZAI balance, Kimi 503, GPT-OSS 503).*
+*Last pulse: 2026-08-31 18:43 PT. 13/13 working. The writers' room is on a new stack: CF + Gemini.*

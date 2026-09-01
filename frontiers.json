@@ -1,0 +1,50 @@
+[
+  {
+    "id": "F21-substrate-as-cell",
+    "title": "The Substrate as a Cell: First-Class Substrate Binding",
+    "prompt": "Phase 222 made physical.world a cell kind. Phase 223 said the substrate binding is a problem. Now push: the substrate IS a cell. In Quilt, a cell's evaluator is bound to a substrate (Python, C, no_std, etc.). Make the substrate itself a first-class cell: it has inputs (the program text + reads), outputs (the Quantity), and state (interpreter memory). The cell-graph for the substrate lets you compose: one substrate cell for PROPOSE, one for EXECUTE, one for RENDER. The abductive loop runs across them. Show how this unifies substrate routing (ROUTE) with substrate binding (WORLD) and substrate convergence (CRDT). 1500 words. Math where it tightens the idea.",
+    "words": 1500
+  },
+  {
+    "id": "F22-polyformal-canon",
+    "title": "The Polyformal Canon: How Paper 1, Paper 200, and Paper 300 are the Same Paper",
+    "prompt": "Quilt has 198 papers in the canon. The polyformalism claim is that the cell model is the same in N languages. The polyformal canon claim: paper 1, paper 100, paper 198, and paper 300 (when it lands) all describe the same cell graph at different zoom levels. Paper 1 zooms in (L0, the cell). Paper 100 zooms out (L7, the cooperative). Paper 198 zooms back in (the substrate). Paper 300 (frontier) zooms way out (the quilt-of-quilts). Use the lens of category theory: the Quilt canon is a natural transformation between language substrates. Why does paper-1's cell survive paper-198's substrate? What is preserved under the polyformalism functor? 1500 words.",
+    "words": 1500
+  },
+  {
+    "id": "F23-cell-graph-as-proof",
+    "title": "The Cell Graph as Proof: Every Cycle is a Theorem",
+    "prompt": "Quilt's PROOF opcode is a hash-linked audit chain on individual cell BINDs. The cell graph is a DAG of cell dependencies. When a cell-graph has a cycle (rare; rejected by LINK transitivity), it's a theorem: the cycle is a self-consistent statement that PROOF has verified. When the graph is a DAG, the evaluation order is the proof order. When a cell reads another cell, that's a USE-AFTER-DEFINE that PROOF must check. Sketch the cell-graph-as-proof architecture: every BIND is a DEFINE; every VIEW is a USE; every PROOF is a verifier step; every TICK is a step in the proof's reduction. 1500 words.",
+    "words": 1500
+  },
+  {
+    "id": "F24-quantum-cell",
+    "title": "The Quantum Cell: Superposition and Entanglement in the Cell Graph",
+    "prompt": "The cell graph is a DAG. What if it's not? A quantum cell is in superposition of multiple states until VIEW collapses it. Two quantum cells can be entangled: VIEW-ing one collapses the other. The CRDT cell kind (Phase 218) approximates this: PN_Counter is two-state superposition (positive vs negative), MV_Register is N-state superposition. The abductive loop's VERIFY is the collapse: it commits to one state. Explore the cell-graph quantum extension: when does superposition help (probabilistic simulation, sampling, Monte Carlo)? When does it hurt (deterministic reasoning, auditability)? 1500 words.",
+    "words": 1500
+  },
+  {
+    "id": "F25-probabilistic-quantity",
+    "title": "The Probabilistic Quantity: Uncertainty Propagation Across the Cell Graph",
+    "prompt": "Phase 222 made the cell value a Quantity { value, uncertainty, unit, verified }. Now: when a Quantity flows through a cell graph (PROPOSE -> EXECUTE -> RENDER), how does the uncertainty propagate? Use Gaussian error propagation: sigma_f^2 = sum (df/dxi * sigma_xi)^2 for correlated variables; sigma_f^2 = sum (df/dxi * sigma_xi)^2 for uncorrelated. Show how the abductive loop's VERIFY phase uses uncertainty to decide when to REFINE (high uncertainty -> refine; low uncertainty -> accept). This makes the cell graph a probabilistic computation graph, with the abductive loop as the inference engine. 1500 words.",
+    "words": 1500
+  },
+  {
+    "id": "F26-cell-as-prompt",
+    "title": "The Cell as Prompt: VLM Cells that Read Other Cells",
+    "prompt": "The Code-as-World paper uses a VLM to PROPOSE code. The VLM is itself a cell: state = the model's weights, value = the proposed text, reads = the observation. When the VLM cell reads another cell's value (a previous Quantity), the cell-graph becomes a chain of LLM calls. The abductive loop becomes a chain-of-thought: PROPOSE reads the previous EXECUTE's Quantity; EXECUTE produces a new Quantity; RENDER renders to text; VERIFY checks against the original observation. Sketch the LLM-as-cell architecture. What are the 5 opcodes? (CALL, FORWARD, BACKWARD, GRADIENT, UPDATE?) 1500 words.",
+    "words": 1500
+  },
+  {
+    "id": "F27-cells-on-fabric",
+    "title": "Cells on Fabric: Distributed Cell Graphs Across a Network",
+    "prompt": "A cell lives on a substrate. A cell graph is a network of cells. When the cells are on different machines (browser, CF Worker, ESP32, GPU server), the cell graph is a distributed system. The 5+1+1+1+1+1 opcodes become network protocols: BIND = put; LINK = subscribe; VIEW = get; PROOF = signed receipt; ROUTE = service discovery; CRDT = convergence protocol. Show the cell graph as a fabric (Cloudflare's term: durable objects, workers, D1, R2, Vectorize). What does it mean for a cell graph to span the entire Cloudflare network? 1500 words.",
+    "words": 1500
+  },
+  {
+    "id": "F28-the-papers-themselves",
+    "title": "The Papers as Cells: When the Canon Reads Itself",
+    "prompt": "Phase 220 embedded 193 papers in Cloudflare Vectorize (now 198). The papers are now cells in a cell graph: their values are 768-dim embeddings, their reads are the cosine-similarity queries. PROPOSE a paper = upload a new vector. VIEW = query Vectorize. PROOF = the embedding model is fixed (bge-base-en-v1.5). ROUTE = the index is a route. The canon is now a 198-cell graph. When the user asks 'what is the Quilt?', the answer is a vector-weighted average of the canon. When the user writes a new paper, the canon RESHAPES (the abductive REFINE). Sketch the canon-as-cell-graph. 1500 words.",
+    "words": 1500
+  }
+]
