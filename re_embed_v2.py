@@ -100,6 +100,9 @@ def get_or_create_index():
         timeout=60,
     )
     if not result.get("success"):
+        # Maybe it already exists (409 Conflict); try GET again
+        if any("already" in str(e).lower() for e in result.get("errors", [])):
+            return {"name": INDEX_NAME}
         raise RuntimeError(f"create error: {result.get('errors')}")
     return result["result"]
 

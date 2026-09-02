@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.o
+*.so
+*.a
+*.dylib
+*.dll
+.DS_Store
+node_modules/
+target/
+.vscode/
+.idea/
